@@ -1,2 +1,3 @@
-# neos-tools
-The package provided tools for Neos development
+# Neos Development Tools
+
+The package provides tools for Neos development
