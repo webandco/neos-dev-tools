@@ -2,10 +2,6 @@
 namespace Webandco\DevTools\Service;
 
 use Neos\Flow\Annotations as Flow;
-use Neos\Flow\Configuration\ConfigurationManager;
-use Neos\Flow\Log\PsrSystemLoggerInterface;
-use Neos\Flow\Log\Utility\LogEnvironment;
-use Neos\Utility\Files;
 
 /**
  * @Flow\Scope("singleton")
@@ -13,24 +9,19 @@ use Neos\Utility\Files;
 class FileService {
 
     /**
-     * @Flow\Inject
-     * @var ConfigurationManager
+     * @Flow\InjectConfiguration(package="Webandco.DevTools")
+     * @var array
      */
-    protected $configurationManager;
-
-    /**
-     * @Flow\Inject
-     * @var PsrSystemLoggerInterface
-     */
-    protected $systemLogger;
+    protected $configuration;
 
     public function createFileNodePublished() {
-        $settings = $this->configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_SETTINGS, 'Webandco.DevTools');
-        $this->systemLogger->debug(json_encode($settings), LogEnvironment::fromMethodName(__METHOD__));
-        if ($settings['nodePublished']['use'] === true) {
-            $file = isset($settings['nodePublished']['file']) ? $settings['nodePublished']['file'] : FLOW_PATH_ROOT . '.WebandcoDevelopmentLastPublished';
-            $this->systemLogger->debug(basename($file), LogEnvironment::fromMethodName(__METHOD__));
-            file_put_contents($file, date('Y.m.d H:i:s') . '.' . gettimeofday()['usec']);
+        if ($this->configuration['nodePublished']['use'] === true) {
+            $file = isset($settings['nodePublished']['file']) ? $this->configuration['nodePublished']['file'] : FLOW_PATH_ROOT . '.WebandcoNeosDevToolsLastPublished';
+            if (is_writeable(dirname($file))) {
+                file_put_contents($file, date('Y.m.d H:i:s') . '.' . gettimeofday()['usec']);
+            } else {
+                throw new InvalidVariableException('The configured path is not writable', 1561991295);
+            }
         }
     }
 }
