@@ -1,0 +1,18 @@
+{
+    "description": "Tools for Neos development",
+    "type": "neos-package",
+    "name": "webandco/neos-dev-tools",
+    "require": {
+        "neos/flow": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webandco\\DevTools\\": "Classes/"
+        }
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Webandco.DevTools"
+        }
+    }
+}
