@@ -1,0 +1,5 @@
+Webandco:
+  DevTools:
+    nodePublished:
+      use: true
+      file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
