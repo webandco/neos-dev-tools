@@ -2,6 +2,7 @@
 namespace Webandco\DevTools\Service;
 
 use Neos\Flow\Annotations as Flow;
+use Neos\FluidAdaptor\Core\ViewHelper\Exception\InvalidVariableException;
 
 /**
  * @Flow\Scope("singleton")
