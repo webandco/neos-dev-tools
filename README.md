@@ -14,7 +14,7 @@ composer require webandco/neos-dev-tools --dev
 
 ### nodePublished file tool
 
-This tools create a file when something is published in Neos. The purpose for this, is to use the file eg in gulp watch for browser-sync and reload the frontend, when the file changes.
+This tools creates a file when something is published in Neos. The purpose for this, is to use the file eg in gulp watch for browser-sync and reload the frontend, when the file changes.
 
 #### Configuration
 
