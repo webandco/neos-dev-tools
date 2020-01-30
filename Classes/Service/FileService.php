@@ -17,7 +17,7 @@ class FileService {
 
     public function createFileNodePublished() {
         if ($this->configuration['nodePublished']['use'] === true) {
-            $file = isset($settings['nodePublished']['file']) ? $this->configuration['nodePublished']['file'] : FLOW_PATH_ROOT . '.WebandcoNeosDevToolsLastPublished';
+            $file = isset($this->configuration['nodePublished']['file']) ? $this->configuration['nodePublished']['file'] : FLOW_PATH_ROOT . '.WebandcoNeosDevToolsLastPublished';
             if (is_writeable(dirname($file))) {
                 file_put_contents($file, date('Y.m.d H:i:s') . '.' . gettimeofday()['usec']);
             } else {
