@@ -3,3 +3,11 @@ Webandco:
     nodePublished:
       use: false
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
+    log:
+      enabled: false
+      pretty: true
+      color: true
+      level: 'debug'
+      renderer:
+        Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
+        Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
