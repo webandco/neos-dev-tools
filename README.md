@@ -47,7 +47,7 @@ This might be handy in a server environment like Beach or custom docker containe
 
 ### Stopwatch
 
-Sometimes it's quite handy to determine how many `ms` some operation takes to find
+Sometimes it's quite handy to determine how many milliseconds an operation took to determine
 performance issues. This package makes use of [Symfony's Stopwatch](https://github.com/symfony/stopwatch)
 for this purpose.
 
@@ -122,7 +122,7 @@ using `$s->getDuration()` or for a single event `$s->getEvent('someeventname')->
 
 ##### Stopwatch metadata
 
-You can also add metadata to a stopwatch, which can be used later on after evaluating the stopwatch.
+You can also add metadata to a stopwatch, which can be used later on.
 
 ```
 public function processNode(Node $node){
@@ -140,14 +140,15 @@ public function processNode(Node $node){
 
 #### Stopwatch signals
 
-The [Stopwatch](./Classes/Domain/Model/Dto/Stopwatch.php) also emits signals
+The [Stopwatch](./Classes/Domain/Model/Dto/Stopwatch.php) emits signals
 upon start/stop/openSection/stopSection. These signals can be used
-to create tree of the stopwatch calls.
+to create a tree of the stopwatch calls.
 This calltree could provide better details on which parts take how long.
 
 ### Logging
 
 This package also provides a quick and dirty way to log to the SystemLogger.
+Keep in mind that this should not be used in production!
 
 The goal is to get a fast way to log to the system log and have some convenience alike
 `console.log` known from browsers.
@@ -156,13 +157,13 @@ In [Package.php](./Classes/Package.php) a function `wLog()` is declared
 in the global namespace.
 This function makes use of the [LogService](./Classes/Service/Log/LogService.php).
 
-After the package is loaded FLOW's property injection is
-ready you can use the function `wLog()` without the need to inject the systemLogger by simply writing
+After the package is loaded you can use the function `wLog()`
+without the need to inject the systemLogger by simply writing
 
 ```
 wLog("Something to log", 4711, null, true);
 ```
-which creates an output like
+somewhere in your code, which creates an output like
 ```
 20-04-10 13:41:11 2865       DEBUG                          Something to log here 4711 NULL true
 ```
@@ -174,7 +175,7 @@ wLog("First line")->wLog("Second line");
 
 #### Configuration
 
-An example configuration be like this:
+An example configuration could be like this:
 
 ```
 Webandco:
