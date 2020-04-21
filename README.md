@@ -106,7 +106,7 @@ $s->restart('nodes');
 foreach($nodes as $node){
     $c = $stopwatch->countLaps('nodes');
     if($c % 10 == 0){  // print ETA on every 10'th node
-        $this->systemLogger->debug("Duration: ".$s->format($s->getEvent('nodes')->getDuration())." ETA: ".$s->format($s->eta('nodes', $nodeCount)));
+        $this->systemLogger->debug("Duration: ".Stopwatch::format($s->getEvent('nodes')->getDuration())." ETA: ".Stopwatch::format($s->eta('nodes', $nodeCount)));
     }
     ...  // process a node
     $s->lap('nodes');
@@ -143,7 +143,125 @@ public function processNode(Node $node){
 The [Stopwatch](./Classes/Domain/Model/Dto/Stopwatch.php) emits signals
 upon start/stop/openSection/stopSection. These signals can be used
 to create a tree of the stopwatch calls.
-This calltree could provide better details on which parts take how long.
+
+##### StopwatchTree
+
+A StopwatchTree is provided which receives the signals emited by a Stopwatch and
+creates a calltree like structure.
+
+The tree gives insight on which parts are slow in a method or multiple stacked methods.
+
+For example, in Neos 4.3, one of the initial requests the neos backend issues is
+`/neos/schema/node-type?version=...`.
+This request depends on the number of nodetypes configured and
+the runtime depends mainly on `Neos.Neos/Classes/Service/NodeTypeSchemaBuilder.php::generateConstraints()`.
+
+The StopwatchTree can be used to get a better view on the method:
+```
+....
+    /**
+     * @Flow\Inject
+     * @var StopwatchFactoryInterface
+     */
+    protected $stopwatchFactory;
+
+    /**
+     * @Flow\Inject
+     * @var StopwatchTreeInterface
+     */
+    protected $stopwatchTree;
+....
+    /**
+     * Generate the list of allowed sub-node-types per parent-node-type and child-node-name.
+     *
+     * @return array constraints
+     */
+    protected function generateConstraints()
+    {
+        $s = $this->stopwatchFactory->create();
+
+        //$s = new Stopwatch();
+        $s->start('generateConstraints');
+        $constraints = [];
+        $nodeTypes = $this->nodeTypeManager->getNodeTypes(true);
+        $s->restart('outer-nodeTypes');
+        /** @var NodeType $nodeType */
+        foreach ($nodeTypes as $nodeTypeName => $nodeType) {
+            $constraints[$nodeTypeName] = [
+                'nodeTypes' => [],
+                'childNodes' => []
+            ];
+            $s->start('inner-nodeTypes');
+            foreach ($nodeTypes as $innerNodeTypeName => $innerNodeType) {
+                $s->start('allowsChildNodeType');
+                if ($nodeType->allowsChildNodeType($innerNodeType)) {
+                    $constraints[$nodeTypeName]['nodeTypes'][$innerNodeTypeName] = true;
+                }
+                $s->stop('allowsChildNodeType');
+
+                $s->lap('inner-nodeTypes');
+            }
+
+            $s->restart('inner-autocreatedChildNodes');
+
+            foreach ($nodeType->getAutoCreatedChildNodes() as $key => $_x) {
+                $s->start('inner-nodeTypes-2');
+                foreach ($nodeTypes as $innerNodeTypeName => $innerNodeType) {
+                    $s->start('allowsGrandchildNodeType');
+                    if ($nodeType->allowsGrandchildNodeType($key, $innerNodeType)) {
+                        $constraints[$nodeTypeName]['childNodes'][$key]['nodeTypes'][$innerNodeTypeName] = true;
+                    }
+                    $s->stop('allowsGrandchildNodeType');
+
+                    $s->lap('inner-nodeTypes-2');
+                }
+                $s->stop('inner-nodeTypes-2');
+
+                $s->lap('inner-autocreatedChildNodes');
+            }
+            $s->stop('inner-autocreatedChildNodes');
+
+            $s->lap('outer-nodeTypes');
+        }
+        $s->stop('outer-nodeTypes');
+
+        wLog($s, "\n".$this->stopwatchTree->getTreeString());
+
+        return $constraints;
+    }
+```
+
+The final `wLog()` logs the signal itself and the call tree:
+```
+20-04-21 10:56:28 26         DEBUG                          Webandco\DevTools\Domain\Model\Dto\Stopwatch 00:01:07.763
+  Events:
+    generateConstraints 00:00:00.128 : 126.00 MiB 
+    outer-nodeTypes 00:00:23.012 : 244.02 MiB 
+    inner-nodeTypes 00:00:14.205 : 244.02 MiB 
+    allowsChildNodeType 00:00:07.032 : 244.02 MiB 
+    inner-autocreatedChildNodes 00:00:08.525 : 244.02 MiB 
+    inner-nodeTypes-2 00:00:08.442 : 242.02 MiB 
+    allowsGrandchildNodeType 00:00:06.419 : 242.02 MiB 
+ 
+generateConstraints : 00:00:00.128
+outer-nodeTypes : 00:00:23.012 (laps 546)
+  inner-nodeTypes : 00:00:14.205 (laps 297570)
+    allowsChildNodeType : 00:00:07.032 (laps 297025)
+  inner-autocreatedChildNodes : 00:00:08.525 (laps 688)
+    inner-nodeTypes-2 : 00:00:08.442 (laps 78078)
+      allowsGrandchildNodeType : 00:00:06.419 (laps 77935)
+```
+
+Keep in mind, that such heavy use of Stopwatch and Signals triples the runtime.
+The method `getConstraints()` took around 23 seconds, which splits in 14 seconds for
+`inner-nodeTypes` and 8 seconds for `inner-autocreatedChildNodes`.
+
+Without the Stopwatch this method took around 6 seconds in the tested project.
+
+#### Performance
+
+From a few tests it seems that excessive use of Stopwatch can double the original runtime without
+signals. Using signals seems to triple the original runtime without a stopwatch.
 
 ### Logging
 
@@ -219,3 +337,17 @@ the needed information, thus you can create a custom renderer to transform a com
 object to simpler log message parts.
 For an example, have a look at [ThrowableLogRenderer.php](./Classes/Service/Log/ThrowableLogRenderer.php)
 and the [Settings.yaml](./Configuration/Settings.yaml).
+
+### Determine Caller
+
+Since flow creates proxy classes it is more complicated to get the caller of a method
+from the backtrace.
+
+The method `BacktraceService::getCaller()` returns caller file, line, class and method
+for a given method and class.
+
+For example, `$this->backtraceService->getCaller(__FUNCTION__, self::class);` ignores
+the interfering aspects or proxy magic from FLOW and returns the caller for the current method.
+
+The method is still work in progress and will surely be refactored in the future since
+there are cases not yet supported.

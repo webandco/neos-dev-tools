@@ -11,3 +11,10 @@ Webandco:
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
+    stopwatch:
+      emitSignals: true
+      tree:
+        wireSignals: true
+        enabled: true
+    backtrace:
+      limit: 50

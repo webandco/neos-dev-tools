@@ -1,0 +1,5 @@
+Webandco\DevTools\Service\Stopwatch\StopwatchFactoryInterface:
+  className: Webandco\DevTools\Service\Stopwatch\StopwatchFactory
+
+Webandco\DevTools\Service\Stopwatch\StopwatchTreeInterface:
+  className: Webandco\DevTools\Service\Stopwatch\StopwatchTree
