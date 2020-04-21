@@ -5,6 +5,7 @@ namespace Webandco\DevTools {
     use Neos\Flow\Configuration\ConfigurationManager;
     use Neos\Flow\Core\Bootstrap;
     use Neos\Flow\Package\Package as BasePackage;
+    use Webandco\DevTools\Service\FileService;
     use Webandco\DevTools\Domain\Model\Dto\Stopwatch;
     use Webandco\DevTools\Service\Stopwatch\StopwatchTree;
 
