@@ -5,6 +5,7 @@ Webandco:
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
     log:
       enabled: false
+      caller: false
       pretty: true
       color: true
       level: 'debug'

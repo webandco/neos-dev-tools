@@ -2,10 +2,12 @@
 namespace Webandco\DevTools\Service\Log;
 
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Error\Debugger;
 use Neos\Flow\Log\Psr\Logger;
 use Neos\Flow\Log\PsrSystemLoggerInterface;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use Psr\Log\LogLevel;
+use Webandco\DevTools\Service\BacktraceService;
 
 class LogService
 {
@@ -22,10 +24,22 @@ class LogService
     protected $systemLogger;
 
     /**
+     * @Flow\Inject
+     * @var BacktraceService
+     */
+    protected $backtraceService;
+
+    /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.enabled")
      * @var boolean
      */
     protected $enabled = false;
+
+    /**
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.caller")
+     * @var boolean
+     */
+    protected $caller = false;
 
     /**
      * Debug level to use for Systemlogger
@@ -196,7 +210,42 @@ class LogService
         return $this;
     }
 
+    protected function endsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        if ($length == 0) {
+            return true;
+        }
+
+        return (substr($haystack, -$length) === $needle);
+    }
+
     protected function log($args){
+        if(count($this->logs) <= 0 && $this->caller) {
+            $caller = $this->backtraceService->getCaller("wLog", false);
+
+            if($caller) {
+                $logLine = "";
+                if (isset($caller['short'])) {
+                    $logLine = $caller['short'];
+                    if (0 < $caller['line']) {
+                        $logLine .= ':' . $caller['line'];
+                    }
+                    if(isset($caller['class'])){
+                        $class = $caller['class'];
+                        if($this->endsWith($class, '_Original')){
+                            $class = substr($class, 0, -9);
+                        }
+                        $logLine .= ':' . $class;
+                    }
+                    if(isset($caller['function'])){
+                        $logLine .= ':' . $caller['function'];
+                    }
+                }
+                $this->logs[] = $logLine;
+            }
+        }
+
         foreach ($args as $arg) {
             switch (gettype($arg)) {
                 case 'boolean':

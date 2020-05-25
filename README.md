@@ -344,10 +344,9 @@ Since flow creates proxy classes it is more complicated to get the caller of a m
 from the backtrace.
 
 The method `BacktraceService::getCaller()` returns caller file, line, class and method
-for a given method and class.
+for a given method and class and uses `Neos\Flow\Error\Debugger`.
 
-For example, `$this->backtraceService->getCaller(__FUNCTION__, self::class);` ignores
+WIP: The goal is that, for example, `$this->backtraceService->getCaller(__FUNCTION__, self::class);` ignores
 the interfering aspects or proxy magic from FLOW and returns the caller for the current method.
 
-The method is still work in progress and will surely be refactored in the future since
-there are cases not yet supported.
+The method is still work in progress and will surely be refactored in the future.
