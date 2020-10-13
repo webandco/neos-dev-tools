@@ -63,6 +63,46 @@ class LogService
     protected $pretty;
 
     /**
+     * Indent the log messages by the depth given by debug_backtrace
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.callDepth.enabled")
+     * @var boolean
+     */
+    protected $callDepth;
+    /**
+     * Indent the log messages by the depth given by debug_backtrace
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.callDepth.separator")
+     * @var float
+     */
+    protected $callDepthSeparator = ' ';
+    /**
+     * Indent the log messages by the depth given by debug_backtrace
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.callDepth.factor")
+     * @var float
+     */
+    protected $callDepthFactor = 1.0;
+
+    /**
+     * @var boolean
+     */
+    protected $bold = false;
+    /**
+     * @var boolean
+     */
+    protected $italic = false;
+    /**
+     * @var boolean
+     */
+    protected $underline = false;
+    /**
+     * @var boolean
+     */
+    protected $blink = false;
+    /**
+     * @var boolean
+     */
+    protected $background = false;
+
+    /**
      *
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.renderer")
      * @var array
@@ -115,6 +155,79 @@ class LogService
     protected $logs = [];
 
     /**
+     * Print message bold
+     * @param bool $enabled
+     * @return $this
+     */
+    public function bold($enabled=true){
+        $this->bold = $enabled;
+        return $this;
+    }
+    /**
+     * Print message bold
+     * @param bool $enabled
+     * @return $this
+     */
+    public function italic($enabled=true){
+        $this->italic = $enabled;
+        return $this;
+    }
+    /**
+     * Print message underlined
+     * @param bool $enabled
+     * @return $this
+     */
+    public function underline($enabled=true){
+        $this->underline = $enabled;
+        return $this;
+    }
+    /**
+     * Print message blinking
+     * @param bool $enabled
+     * @return $this
+     */
+    public function blink($enabled=true){
+        $this->blink = $enabled;
+        return $this;
+    }
+
+    /**
+     * Print message underlined
+     * @param string $color
+     * @return $this
+     */
+    public function background(string $color){
+        switch($color){
+            case 'black':
+                $this->background = 'bg_black';
+                break;
+            case 'red':
+                $this->background = 'bg_red';
+                break;
+            case 'green':
+                $this->background = 'bg_green';
+                break;
+            case 'yellow':
+                $this->background = 'bg_yellow';
+                break;
+            case 'blue':
+                $this->background = 'bg_blue';
+                break;
+            case 'magenta':
+                $this->background = 'bg_magenta';
+                break;
+            case 'cyan':
+                $this->background = 'bg_cyan';
+                break;
+            case 'white':
+                $this->background = 'bg_white';
+                break;
+        }
+
+        return $this;
+    }
+
+    /**
      * Enable or disable colored output
      *
      * @param bool|string $c If set to false, colors are disabled, if set to true, rainbow colors are used, a color name from $colorFormats can also be used
@@ -146,6 +259,71 @@ class LogService
     }
 
     /**
+     * @param boolean $cond
+     * @return $this
+     */
+    public function condition(bool $cond){
+        $this->enabled = $cond;
+        return $this;
+    }
+
+    /**
+     * @param boolean $enabled
+     * @param string $separator
+     * @param float $factor
+     * @return $this
+     */
+    public function withCallDepth(bool $enabled=true, string $separator = null, float $factor=null){
+        $this->callDepth = $enabled;
+        if(!is_null($separator)){
+            $this->callDepthSeparator = $separator;
+        }
+        if(!is_null($factor)){
+            $this->callDepthFactor = $factor;
+        }
+
+        return $this;
+    }
+
+    /**
+     * @param boolean $enabled
+     * @param string $separator
+     * @param float $factor
+     * @return $this
+     */
+    public function withCaller(){
+        $caller = $this->backtraceService->getCaller(__FUNCTION__, __CLASS__);
+
+        $this->addCallerLogLine($caller);
+
+        return $this;
+    }
+    protected function addCallerLogLine($caller){
+        if($caller) {
+            $logLine = "";
+            if (isset($caller['short'])) {
+                $logLine = $caller['short'];
+                if (0 < $caller['line']) {
+                    $logLine .= ':' . $caller['line'];
+                }
+                if(isset($caller['class'])){
+                    $class = $caller['class'];
+                    if($this->endsWith($class, '_Original')){
+                        $class = substr($class, 0, -9);
+                    }
+                    $logLine .= ':' . $class;
+                }
+                if(isset($caller['function'])){
+                    $logLine .= ':' . $caller['function'];
+                }
+            }
+
+            array_unshift($this->logs, $logLine);
+        }
+    }
+
+
+    /**
      * Finally write the message to the systemlogger
      */
     protected function writeLog(){
@@ -154,6 +332,11 @@ class LogService
         }
 
         self::$logCounter++;
+
+        if($this->callDepth){
+            $depthCount = \count(\debug_backtrace(false));
+            \array_unshift($this->logs, \str_repeat($this->callDepthSeparator, \max(0,(int)($depthCount*$this->callDepthFactor))));
+        }
 
         $jsonEncodingOptions = 0;
         if ($this->pretty) {
@@ -173,6 +356,23 @@ class LogService
         }
         else if(isset(self::$colorFormats[$this->color])){
             $colorFormat = self::$colorFormats[$this->color];
+        }
+
+        if($this->bold){
+            $colorFormat = sprintf(self::$colorFormats['bold'], $colorFormat);
+        }
+        if($this->italic){
+            $colorFormat = sprintf(self::$colorFormats['italic'], $colorFormat);
+        }
+        if($this->underline){
+            $colorFormat = sprintf(self::$colorFormats['underline'], $colorFormat);
+        }
+        if($this->blink){
+            $colorFormat = sprintf(self::$colorFormats['blink'], $colorFormat);
+        }
+
+        if($this->background){
+            $colorFormat = sprintf(self::$colorFormats[$this->background], $colorFormat);
         }
 
         $level = 'debug';
@@ -203,8 +403,6 @@ class LogService
         $args = func_get_args();
         if (0 < count($args)) {
             $this->log($args);
-
-            $this->writeLog();
         }
 
         return $this;
@@ -224,26 +422,7 @@ class LogService
         if(count($this->logs) <= 0 && $this->caller) {
             $caller = $this->backtraceService->getCaller("wLog", false);
 
-            if($caller) {
-                $logLine = "";
-                if (isset($caller['short'])) {
-                    $logLine = $caller['short'];
-                    if (0 < $caller['line']) {
-                        $logLine .= ':' . $caller['line'];
-                    }
-                    if(isset($caller['class'])){
-                        $class = $caller['class'];
-                        if($this->endsWith($class, '_Original')){
-                            $class = substr($class, 0, -9);
-                        }
-                        $logLine .= ':' . $class;
-                    }
-                    if(isset($caller['function'])){
-                        $logLine .= ':' . $caller['function'];
-                    }
-                }
-                $this->logs[] = $logLine;
-            }
+            $this->addCallerLogLine($caller);
         }
 
         foreach ($args as $arg) {
@@ -283,4 +462,8 @@ class LogService
         }
     }
 
+    public function __destruct()
+    {
+        $this->writeLog();
+    }
 }

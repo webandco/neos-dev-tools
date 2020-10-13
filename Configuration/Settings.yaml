@@ -4,7 +4,11 @@ Webandco:
       use: false
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
     log:
-      enabled: false
+      enabled: true
+      callDepth:
+        enabled: false
+        separator: ' '
+        factor: 1
       caller: false
       pretty: true
       color: true
@@ -12,6 +16,7 @@ Webandco:
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
+        Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
     stopwatch:
       emitSignals: false
       tree:

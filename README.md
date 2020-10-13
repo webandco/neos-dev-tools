@@ -300,13 +300,17 @@ Webandco:
   DevTools:
     log:
       enabled: true
+      callDepth:
+        enabled: false
+        separator: ' '
+        factor: 1
+      caller: false
       pretty: true
       color: true
       level: 'debug'
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
-
 ```
 
 * enabled: To enable or disable logging to SystemLogger. The global method `wLog()` is created always.
@@ -328,6 +332,19 @@ the [LogRendererInterface.php](./Classes/Service/Log/LogRendererInterface.php)
 You can overrule the config using
 ```
 wLog()->pretty(true)->color('red')->level('critical')->wLog("Something gone wrong, see this Exception", $e);
+```
+
+Enable logging the call depth given by `count(debug_backtrace(false))`:
+```
+wLog("log message")->withCallDepth();
+```
+
+##### Colored log messages
+
+The messages written to the systemlogger are wrapped by bash color formating.
+It is possible to log messages in bold, italic, blinking, underlined or with a background color.
+```
+wLog("very important")->color('red')->background('green')->italic()->bold()->blink()->underline();
 ```
 
 #### Custom Log Renderer

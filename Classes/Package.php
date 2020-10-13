@@ -40,6 +40,9 @@ namespace {
 
     use Webandco\DevTools\Service\Log\LogService;
 
+    /**
+     * @return LogService
+     */
     function wLog(){
         $args = func_get_args();
 

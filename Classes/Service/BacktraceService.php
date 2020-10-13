@@ -3,8 +3,6 @@ namespace Webandco\DevTools\Service;
 
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Error\Debugger;
-use Neos\Flow\ObjectManagement\DependencyInjection\DependencyProxy;
-use Neos\Flow\ObjectManagement\Proxy\ProxyInterface;
 
 /**
  * @Flow\Scope("singleton")
@@ -25,7 +23,7 @@ class BacktraceService {
             $ok = false;
 
             if(isset($step['function']) && $step['function'] == $method){
-                if($class === false && !isset($step['class']) || is_null($class) || (!is_null($class) && isset($step['class']) && $step['class'] == $class)){
+                if((is_null($class) && !isset($step['class'])) || is_null($class) || (!is_null($class) && isset($step['class']) && $step['class'] == $class)){
                     $ok = true;
                 }
             }
