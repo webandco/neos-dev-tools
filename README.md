@@ -347,6 +347,14 @@ It is possible to log messages in bold, italic, blinking, underlined or with a b
 wLog("very important")->color('red')->background('green')->italic()->bold()->blink()->underline();
 ```
 
+##### Conditional logging
+
+To reduce the amount of log messages a condition can be added
+```
+wLog("problem node", $node)->condition($node->getName() == 'node-og6r6je5wpwnd');
+```
+
+
 #### Custom Log Renderer
 
 Complex objects are rendered using `json_encode`. Often this doesn't expose
