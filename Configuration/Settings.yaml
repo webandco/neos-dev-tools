@@ -12,11 +12,23 @@ Webandco:
       caller: false
       pretty: true
       color: true
+      colorCallOrder:
+        - 'green'
+        - 'cyan'
+        - 'blue'
+        - 'magenta'
+        - 'yellow'
+        - 'red'
       level: 'debug'
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
         Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
+        Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
+      signal:
+        enabled: false
+        # regex for signalClassName::signalName
+        regex: '/.*/'
     stopwatch:
       emitSignals: false
       tree:

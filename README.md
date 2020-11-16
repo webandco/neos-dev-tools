@@ -307,10 +307,23 @@ Webandco:
       caller: false
       pretty: true
       color: true
+      colorCallOrder:
+        - 'green'
+        - 'cyan'
+        - 'blue'
+        - 'magenta'
+        - 'yellow'
+        - 'red'
       level: 'debug'
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
+        Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
+        Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
+      signal:
+        enabled: false
+        # regex for signalClassName::signalName
+        regex: '/.*allObjectsPersisted$/'
 ```
 
 * enabled: To enable or disable logging to SystemLogger. The global method `wLog()` is created always.
@@ -325,7 +338,8 @@ bg_blue, bg_magenta, bg_cyan, bg_white`.
 * level: The log level to use for logging. Can be any of
 `emergency, alert, critical, error, warning, notice, info, debug`
 * renderer: For custom objects you can provide a custom renderer which implements
-the [LogRendererInterface.php](./Classes/Service/Log/LogRendererInterface.php) 
+the [LogRendererInterface.php](./Classes/Service/Log/LogRendererInterface.php)
+* signal: If enabled the emitted signals and their corresponding slots are logged using the DevTools log facility 
 
 ##### Overrule config
 
@@ -375,3 +389,50 @@ WIP: The goal is that, for example, `$this->backtraceService->getCaller(__FUNCTI
 the interfering aspects or proxy magic from FLOW and returns the caller for the current method.
 
 The method is still work in progress and will surely be refactored in the future.
+
+##### Log format mixing in one line
+
+It is possible to write log lines with changing format:
+```
+wLog()->bold(LogService::FORMAT_ON)->wLog('This is bold')->bold(LogService::FORMAT_OFF)
+      ->italic(LogService::FORMAT_ON)->wLog('This is italic text')->italic(LogService::FORMAT_OFF);
+```
+This line results in a single log line that looks like: ***This is bold*** *This is italic*
+
+##### Force log message
+
+By default the logs are written during `__destruct()` of the LogService.
+If you inject the LogService you can call `eol()` to force writing the log message:
+```
+wLog('Whats wrong with the node:', $nodeData)->eol();
+```
+
+##### LogService injection
+
+To avoid the global `wLog()` method you can also inject the LogService
+```
+    /**
+     * @Flow\Inject
+     * @var LogService
+     */
+    protected $logService;
+```
+The injected LogService can then be used to write log messages using the `eol()` method
+```
+...
+// first log line
+$this->logService->wLog('Some log message')->eol();
+...
+// second log line
+$this->logService->wLog('Another log message')->eol();
+....
+``` 
+
+##### Signal logging
+
+For debugging certain requests or implementing a feature
+it can be useful to know which signals are emitted
+and who catches them.  
+This can be enabled in the [Settings.yaml](./Configuration/Settings.yaml)
+via `Webco.DevTools.log.signal.enabled`. A regex can be specified to
+only show matching signals matching, e.g. `/.*nodePropertyChanged$/i`.

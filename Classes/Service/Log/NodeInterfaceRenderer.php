@@ -14,13 +14,11 @@ class NodeInterfaceRenderer implements LogRenderInterface
      */
     public function render(LogService $logService, $what){
         /** @var \Neos\ContentRepository\Domain\Model\NodeInterface $what */
-        $line = '[ ' . $what->getIdentifier(). ' '.$what->getWorkspace()->getName().' '.$what->getPath().' '.$what->getNodeType()->getName().' '.\json_encode($what->getDimensions()).' ]';
+        $line = '[ {NodeInterface} ' . $what->getIdentifier(). ' '.$what->getWorkspace()->getName().' '.$what->getPath().' '.$what->getNodeType()->getName().' '.\json_encode($what->getDimensions()).' ]';
         $line .= ' {'. \json_encode($what->getProperties()).'}';
 
-        $logs = [
+        return [
             $line
         ];
-
-        return $logs;
     }
 }
