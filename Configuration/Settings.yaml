@@ -26,9 +26,24 @@ Webandco:
         Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
         Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
       signal:
+        # if enabled the emitted signals are logged with an aspect
         enabled: false
         # regex for signalClassName::signalName
         regex: '/.*/'
+        # some signals are dispatched directly via $this->signalDispatcher->dispatch($signalClass, $signalName, ...);
+        # which don't trigger the aspect
+        # to catch these too, the following allows to connect to those signals
+        explicitSignals:
+          #- signalClass: 'Neos\Flow\Mvc\Dispatcher'
+          #  signalName: 'beforeControllerInvocation'
+          #- signalClass: 'Neos\Flow\Mvc\Dispatcher'
+          #  signalName: 'afterControllerInvocation'
+          #- signalClass: 'Neos\Flow\Monitor\FileMonitor'
+          #  signalName: 'filesHaveChanged'
+          #- signalClass: 'Neos\Flow\Monitor\FileMonitor'
+          #  signalName: 'directoriesHaveChanged'
+          #- signalClass: 'Neos\Flow\Mvc\ActionRequest'
+          #  signalName: 'requestDispatched'
     stopwatch:
       emitSignals: false
       tree:

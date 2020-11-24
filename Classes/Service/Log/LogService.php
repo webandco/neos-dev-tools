@@ -9,6 +9,9 @@ use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use Psr\Log\LogLevel;
 use Webandco\DevTools\Service\BacktraceService;
 
+/**
+ * @Flow\Scope("singleton")
+ */
 class LogService
 {
     const FORMAT_ON  = 'on';

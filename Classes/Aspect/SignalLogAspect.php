@@ -56,7 +56,14 @@ class SignalLogAspect
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.signal.regex")
      * @var string
      */
-    protected $regex = '.*';
+    protected $regex = '/.*/';
+
+    /**
+     *
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.signal.explicitSignals")
+     * @var array
+     */
+    protected $explicitSignals = [];
 
     /**
      * Passes the signal over to the Dispatcher
@@ -65,21 +72,44 @@ class SignalLogAspect
      * @param JoinPointInterface $joinPoint The current join point
      * @return void
      */
-    public function logSignal(JoinPointInterface $joinPoint)
+    public function signalAspect(JoinPointInterface $joinPoint)
     {
         if(false === $this->enabled){
             return;
         }
 
         $signalClassName = $joinPoint->getClassName();
-        $signalArguments = $joinPoint->getMethodArguments();
         $signalName = lcfirst(str_replace('emit', '', $joinPoint->getMethodName()));
+        $signalArguments = $joinPoint->getMethodArguments();
 
+        // ignore explicit attached signals
+        foreach((array)$this->explicitSignals as $explicitSignal){
+            if($explicitSignal['signalClass'] == $signalClassName &&
+               $explicitSignal['signalClass'] == $signalName){
+                return;
+            }
+        }
+
+        $this->logSignal($signalClassName, $signalName, $signalArguments);
+    }
+
+    public function signalSlot(){
+        $signalArguments = func_get_args();
+
+        $signalInformation = $signalArguments[count($signalArguments)-1];
+        unset($signalArguments[count($signalArguments)-1]);
+
+        list($signalClassName, $signalName) = explode("::", $signalInformation, 2);
+
+        //error_log("signal emmited");
+
+        $this->logSignal($signalClassName, $signalName, $signalArguments);
+    }
+
+    public function logSignal($signalClassName, $signalName, $signalArguments){
         if(1 !== preg_match($this->regex, $signalClassName.'::'.$signalName)){
             return;
         }
-
-        $slots = $this->dispatcher->getSlots($signalClassName, $signalName);
 
         $loggedArguments = [];
         foreach($signalArguments as $argument){
@@ -101,6 +131,8 @@ class SignalLogAspect
                     $loggedArguments[] = $argument;
             }
         }
+
+        $slots = $this->dispatcher->getSlots($signalClassName, $signalName);
 
         $loggedSlots = [];
         foreach($slots as $slotInformation){
@@ -128,10 +160,10 @@ class SignalLogAspect
         }
 
         $this->logService->pretty(false)
-                         ->wLog("signal emitted: ")
-                         ->wLog($signalClassName.'::'.$signalName.'(')
-                         ->wLog(...$loggedArguments)
-                         ->wLog(')->')->wLog(count($loggedSlots) ? $loggedSlots : 'no slots defined')
-                         ->eol();
+            ->wLog("signal emitted: ")
+            ->wLog($signalClassName.'::'.$signalName.'(')
+            ->wLog(...$loggedArguments)
+            ->wLog(')->')->wLog(count($loggedSlots) ? $loggedSlots : 'no slots defined')
+            ->eol();
     }
 }
