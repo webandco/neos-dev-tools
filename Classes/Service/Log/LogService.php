@@ -4,8 +4,8 @@ namespace Webandco\DevTools\Service\Log;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Error\Debugger;
 use Neos\Flow\Log\Psr\Logger;
-use Neos\Flow\Log\PsrSystemLoggerInterface;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
+use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Webandco\DevTools\Service\BacktraceService;
 
@@ -22,7 +22,7 @@ class LogService
 
     /**
      * @Flow\Inject
-     * @var PsrSystemLoggerInterface
+     * @var LoggerInterface
      */
     protected $systemLogger;
 
