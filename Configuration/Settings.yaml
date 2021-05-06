@@ -1,5 +1,12 @@
+Neos:
+  Fusion:
+    defaultContext:
+      Webandco.DevTools: 'Webandco\DevTools\Eel\Helper\WLogHelper'
+
 Webandco:
   DevTools:
+    fusion:
+      enableRenderStats: false
     nodePublished:
       use: false
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
@@ -25,6 +32,7 @@ Webandco:
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
         Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
         Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
+        Neos\Fusion\FusionObjects\AbstractFusionObject: Webandco\DevTools\Service\Log\AbstractFusionObjectRenderer
       signal:
         enabled: false
         # regex for signalClassName::signalName

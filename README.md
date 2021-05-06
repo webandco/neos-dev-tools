@@ -377,6 +377,19 @@ object to simpler log message parts.
 For an example, have a look at [ThrowableLogRenderer.php](./Classes/Service/Log/ThrowableLogRenderer.php)
 and the [Settings.yaml](./Configuration/Settings.yaml).
 
+#### Eel Helper
+
+An Eel Helper is added to make use of `wLog` via fusion. The helper provides two methods
+* `wLog()` which just forwards the arguments to the actual `function wLog()`
+* `rwLog()` which uses the first argument as the return value. The other arguments are forwarded to the actual `function wLog()` again.
+
+For example
+```
+@process.log = ${value + Webandco.DevTools.rwLog(Date.format('now', 'Y-m-d H:i:s'), this)}
+```
+will add the current date and time to the current fusion value and writes the fusion object in the log.
+An `AbstractFusionObjectRenderer` is also provided to format the given `AbstractFusionObject`s.
+
 ### Determine Caller
 
 Since flow creates proxy classes it is more complicated to get the caller of a method
@@ -436,3 +449,17 @@ and who catches them.
 This can be enabled in the [Settings.yaml](./Configuration/Settings.yaml)
 via `Webco.DevTools.log.signal.enabled`. A regex can be specified to
 only show matching signals matching, e.g. `/.*nodePropertyChanged$/i`.
+
+## FusionRenderingAspect
+
+Via the configuration
+```
+Webandco:
+  DevTools:
+    fusion:
+      enableRenderStats: false
+```
+an aspect is enabled which collects stats about rendered fusion objects.
+The result is written to the System log via `wLog()`. This can be handy in determining which
+fusion prototypes should be cached. The list printed via `wLog()` is ordered by the least relevant
+prototype to the most relevant which would benefit the most if it is cached.
