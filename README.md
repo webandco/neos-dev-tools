@@ -450,6 +450,19 @@ This can be enabled in the [Settings.yaml](./Configuration/Settings.yaml)
 via `Webco.DevTools.log.signal.enabled`. A regex can be specified to
 only show matching signals matching, e.g. `/.*nodePropertyChanged$/i`.
 
+##### Log to stdout in case of cli
+
+In Settings.yaml you can set the configuration logger depending on the php sapi name:
+```
+Webandco:
+  DevTools:
+    log:
+      sapiLogger:
+        cli: 'webcoDevStdoutLogger'
+```
+
+In the above configuration, `webcoDevStdoutLogger` is used to log to stdout in case of CLI commands.
+
 ## FusionRenderingAspect
 
 Via the configuration

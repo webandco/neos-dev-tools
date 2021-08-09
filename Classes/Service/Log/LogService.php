@@ -4,6 +4,7 @@ namespace Webandco\DevTools\Service\Log;
 use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Error\Debugger;
 use Neos\Flow\Log\Psr\Logger;
+use Neos\Flow\Log\PsrLoggerFactoryInterface;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -22,12 +23,6 @@ class LogService
 
     /**
      * @Flow\Inject
-     * @var LoggerInterface
-     */
-    protected $systemLogger;
-
-    /**
-     * @Flow\Inject
      * @var BacktraceService
      */
     protected $backtraceService;
@@ -39,13 +34,19 @@ class LogService
     protected $enabled = false;
 
     /**
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.sapiLogger")
+     * @var array<string>
+     */
+    protected $sapiLoggers = [];
+
+    /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.caller")
      * @var boolean
      */
     protected $caller = false;
 
     /**
-     * Debug level to use for Systemlogger
+     * Debug level to use for logger
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.level")
      * @var boolean
      */
@@ -388,7 +389,7 @@ class LogService
     }
 
     /**
-     * Finally write the message to the systemlogger
+     * Finally write the message to the logger
      */
     protected function writeLog(){
         if (!$this->enabled || 0 == count($this->logs)){
@@ -433,22 +434,22 @@ class LogService
         if($this->bold){
             $this->resetOnEOL = true;
 
-            $logFormat = $logFormat = self::$colorFormats['bold']['on'].$logFormat.''.self::$colorFormats['bold']['off'];
+            $logFormat = self::$colorFormats['bold']['on'].$logFormat.''.self::$colorFormats['bold']['off'];
         }
         if($this->italic){
             $this->resetOnEOL = true;
 
-            $logFormat = $logFormat = self::$colorFormats['italic']['on'].$logFormat.''.self::$colorFormats['italic']['off'];
+            $logFormat = self::$colorFormats['italic']['on'].$logFormat.''.self::$colorFormats['italic']['off'];
         }
         if($this->underline){
             $this->resetOnEOL = true;
 
-            $logFormat = $logFormat = self::$colorFormats['underline']['on'].$logFormat.''.self::$colorFormats['underline']['off'];
+            $logFormat = self::$colorFormats['underline']['on'].$logFormat.''.self::$colorFormats['underline']['off'];
         }
         if($this->blink){
             $this->resetOnEOL = true;
 
-            $logFormat = $logFormat = self::$colorFormats['blink']['on'].$logFormat.''.self::$colorFormats['blink']['off'];
+            $logFormat = self::$colorFormats['blink']['on'].$logFormat.''.self::$colorFormats['blink']['off'];
         }
 
         if($this->background && isset(self::$colorFormats[$this->background])){
@@ -471,13 +472,25 @@ class LogService
                 $level = $logMapping[$this->level];
             }
         }
-        $this->systemLogger->$level(sprintf($logFormat, implode(' ', $this->logs)));
+
+        $loggerName = 'systemLogger';
+        $sapiName = php_sapi_name();
+        if(isset($this->sapiLoggers[$sapiName])){
+            $loggerName = $this->sapiLoggers[$sapiName];
+        }
+        else if(isset($this->sapiLoggers['default'])){
+            $loggerName = $this->sapiLoggers['default'];
+        }
+
+        $logger = $this->objectManager->get(PsrLoggerFactoryInterface::class)->get($loggerName);
+        $message = sprintf($logFormat, implode(' ', $this->logs));
+        $logger->$level($message);
 
         $this->logs = [];
     }
 
     /**
-     * Write the given arguments to the systemlogger
+     * Write the given arguments to the configured sapiLogger
      * @return LogService
      */
     public function wLog()
@@ -532,20 +545,29 @@ class LogService
                         $rendered = false;
                         foreach($this->logRenderer as $objectName => $how){
                             if($arg instanceof $objectName){
-                                $renderer = $this->objectManager->get($how);
-                                $this->logs = array_merge($this->logs, $renderer->render($this, $arg));
+                                $this->appendRenderedObject($how, $arg);
                                 $rendered = true;
                                 break;
                             }
                         }
                         if (!$rendered) {
-                            $this->logs[] = get_class($arg) . ":";
-                            $this->logs[] = $arg;
+                            $this->appendRenderedObject(ObjectRenderer::class, $arg);
                         }
                     }
                     // "resource" or "unknown type" is ignored
             }
         }
+    }
+
+    protected function appendRenderedObject($how, $arg){
+        $renderer = $this->objectManager->get($how);
+
+        $line = $renderer->render($this, $arg);
+        if(!is_array($line)) {
+            $line = [$line];
+        }
+
+        $this->logs = \array_merge($this->logs, $line);
     }
 
     public function __destruct()

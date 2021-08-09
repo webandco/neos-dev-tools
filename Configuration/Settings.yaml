@@ -1,4 +1,15 @@
 Neos:
+  Flow:
+    log:
+      psr3:
+        'Neos\Flow\Log\PsrLoggerFactory':
+          webcoDevStdoutLogger:
+            default:
+              class: Neos\Flow\Log\Backend\AnsiConsoleBackend
+              options:
+                #streamName: 'stdout' # not yet supported
+                severityThreshold: '%LOG_DEBUG%'
+
   Fusion:
     defaultContext:
       Webandco.DevTools: 'Webandco\DevTools\Eel\Helper\WLogHelper'
@@ -12,6 +23,8 @@ Webandco:
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
     log:
       enabled: true
+      sapiLogger: # which logger to use for php sapi types - for possible key values see php_sapi_name()
+        #cli: 'webcoDevStdoutLogger' # Log to stdout using AnsiConsoleBackend configured above in case of cli
       callDepth:
         enabled: false
         separator: ' '
