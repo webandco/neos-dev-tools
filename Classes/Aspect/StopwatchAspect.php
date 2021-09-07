@@ -7,8 +7,6 @@ use Neos\Flow\Annotations as Flow;
 use Neos\Flow\Aop\JoinPointInterface;
 
 /**
- * Fix issues with custom provider authentication not fixed in NEOS 4.3
- * https://github.com/neos/neos-development-collection/pull/2577
  *
  * @Flow\Scope("singleton")
  * @Flow\Aspect
