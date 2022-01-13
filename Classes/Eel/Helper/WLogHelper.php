@@ -14,12 +14,12 @@ use Neos\Fusion\FusionObjects\AbstractFusionObject;
  */
 class WLogHelper implements ProtectedContextAwareInterface {
     /**
-     * Returns the name of the current fusion object
+     * Logs the method arguments using wLog to System log
      *
-     * @return string
+     * @return void
      * @throws \ReflectionException
      */
-    public function wLog() :string
+    public function wLog() :void
     {
         $args = func_get_args();
 
@@ -27,12 +27,13 @@ class WLogHelper implements ProtectedContextAwareInterface {
     }
 
     /**
-     * Returns the name of the current fusion object
+     * Returns the first method argument and
+     * logs other arguments using wLog to System log
      *
-     * @return string
+     * @return mixed
      * @throws \ReflectionException
      */
-    public function rwLog() :string
+    public function rwLog(): mixed
     {
         $args = func_get_args();
         $firstArg = \array_shift($args);
