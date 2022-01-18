@@ -33,7 +33,7 @@ class WLogHelper implements ProtectedContextAwareInterface {
      * @return mixed
      * @throws \ReflectionException
      */
-    public function rwLog(): mixed
+    public function rwLog()
     {
         $args = func_get_args();
         $firstArg = \array_shift($args);
