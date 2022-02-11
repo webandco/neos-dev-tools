@@ -17,9 +17,7 @@ class BacktraceService {
     public function getCaller($method, $class=null, $ignoreAspect=true) {
         $caller = [];
 
-        $trace = $this->getTrace();
-
-        foreach($trace as $k => $step){
+        $this->iterateTrace(function($k, $step) use($caller, $method, $class, $ignoreAspect){
             $ok = false;
 
             if(isset($step['function']) && $step['function'] == $method){
@@ -42,9 +40,11 @@ class BacktraceService {
                     $caller['class'] = $trace[$k+1]['class'];
                 }
 
-                break;
+                return false;
             }
-        }
+
+            return true;
+        });
 
         if(count($caller)) {
             return $caller;
@@ -53,16 +53,20 @@ class BacktraceService {
         return null;
     }
 
-    protected function getTrace()
+    protected function iterateTrace(\Closure $closure, bool $withProxy = false)
     {
+        $start = microtime(true);
         $trace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $this->limit);
         foreach ($trace as $index => $step) {
-            if(isset($step['file']) && file_exists($step['file'])){
+            if($withProxy && isset($step['file']) && file_exists($step['file'])){
                 $proxy = Debugger::findProxyAndShortFilePath($step['file']);
                 $trace[$index]['short'] = $proxy['short'];
                 $trace[$index]['proxy'] = $proxy['proxy'];
             }
+
+            if(!$closure($index, $trace[$index])){
+                break;
+            }
         }
-        return $trace;
     }
 }
