@@ -23,6 +23,8 @@ Webandco:
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
     log:
       enabled: true
+      numberFormat:
+        decimals: 4
       sapiLogger: # which logger to use for php sapi types - for possible key values see php_sapi_name()
         #cli: 'webcoDevStdoutLogger' # Log to stdout using AnsiConsoleBackend configured above in case of cli
       callDepth:

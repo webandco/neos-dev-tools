@@ -12,7 +12,7 @@ use Webandco\DevTools\Service\BacktraceService;
 
 class LogService
 {
-    const FORMAT_ON  = 'on';
+    const FORMAT_ON = 'on';
     const FORMAT_OFF = 'off';
 
     /**
@@ -32,6 +32,12 @@ class LogService
      * @var boolean
      */
     protected $enabled = false;
+
+    /**
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.numberFormat")
+     * @var array
+     */
+    protected $numberFormat = [];
 
     /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.sapiLogger")
@@ -122,7 +128,7 @@ class LogService
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.colorCallOrder")
      * @var array
      */
-    protected $callColorOrder = [ 'green', 'cyan', 'blue', 'magenta', 'yellow', 'red' ];
+    protected $callColorOrder = ['green', 'cyan', 'blue', 'magenta', 'yellow', 'red'];
 
     /**
      * Used to generate rainbow color output
@@ -139,24 +145,24 @@ class LogService
         // italic and blink may not work depending of your terminal
         'none' => "%s",
         'reset' => "\033[0m",
-        'bold' =>      ['on' => "\033[1m", 'off' => "\033[22m"],
-        'dark' =>      ['on' => "\033[2m", 'off' => "\033[22m"],
-        'italic' =>    ['on' => "\033[3m", 'off' => "\033[23m"],
-        'underline' => ['on' => "\033[4m", 'off' => "\033[24m"],
-        'blink' =>     ['on' => "\033[5m", 'off' => "\033[25m"],
+        'bold' =>       ['on' => "\033[1m", 'off' => "\033[22m"],
+        'dark' =>       ['on' => "\033[2m", 'off' => "\033[22m"],
+        'italic' =>     ['on' => "\033[3m", 'off' => "\033[23m"],
+        'underline' =>  ['on' => "\033[4m", 'off' => "\033[24m"],
+        'blink' =>      ['on' => "\033[5m", 'off' => "\033[25m"],
         // invert fore- and background color
-        'invert' =>    ['on' => "\033[7m", 'off' => "\033[27m"],
+        'invert' =>     ['on' => "\033[7m", 'off' => "\033[27m"],
         // hide output - e.g. for passwords
-        'concealed' => ['on' => "\033[8m", 'off' => "\033[28m"],
+        'concealed' =>  ['on' => "\033[8m", 'off' => "\033[28m"],
         // foreground colors
-        'black' =>   ['on' => "\033[30m", 'off' => "\033[39m"],
-        'red' =>     ['on' => "\033[31m", 'off' => "\033[39m"],
-        'green' =>   ['on' => "\033[32m", 'off' => "\033[39m"],
-        'yellow' =>  ['on' => "\033[33m", 'off' => "\033[39m"],
-        'blue' =>    ['on' => "\033[34m", 'off' => "\033[39m"],
-        'magenta' => ['on' => "\033[35m", 'off' => "\033[39m"],
-        'cyan' =>    ['on' => "\033[36m", 'off' => "\033[39m"],
-        'white' =>   ['on' => "\033[37m", 'off' => "\033[39m"],
+        'black' =>      ['on' => "\033[30m", 'off' => "\033[39m"],
+        'red' =>        ['on' => "\033[31m", 'off' => "\033[39m"],
+        'green' =>      ['on' => "\033[32m", 'off' => "\033[39m"],
+        'yellow' =>     ['on' => "\033[33m", 'off' => "\033[39m"],
+        'blue' =>       ['on' => "\033[34m", 'off' => "\033[39m"],
+        'magenta' =>    ['on' => "\033[35m", 'off' => "\033[39m"],
+        'cyan' =>       ['on' => "\033[36m", 'off' => "\033[39m"],
+        'white' =>      ['on' => "\033[37m", 'off' => "\033[39m"],
         // background colors
         'bg_black' =>   ['begin' => "\033[40m", 'off' => "\033[49m"],
         'bg_red' =>     ['begin' => "\033[41m", 'off' => "\033[49m"],
@@ -177,53 +183,88 @@ class LogService
     protected $logs = [];
 
     /**
-     * Print message bold
-     * @param bool $enabled
-     * @return $this
+     * Time in seconds when the object was created
+     * @var int
      */
-    public function bold($enabled=true){
-        $this->setBoolProperty('bold', $enabled);
-        return $this;
+    protected $start = 0;
+    /**
+     * Determines if timing is enabled
+     * @var bool
+     */
+    protected $timing = false;
+    /**
+     * Identifier for the current timing call
+     * @var string
+     */
+    protected $timingIdentifier = null;
+    /**
+     * Per timingIdentifier logs of durations
+     * @var array
+     */
+    protected static $timingLogs = [];
+
+    public function initializeObject() {
+        $this->start = microtime(true);
     }
+
     /**
      * Print message bold
      * @param bool $enabled
      * @return $this
      */
-    public function italic($enabled=true){
+    public function bold($enabled = true)
+    {
+        $this->setBoolProperty('bold', $enabled);
+        return $this;
+    }
+
+    /**
+     * Print message bold
+     * @param bool $enabled
+     * @return $this
+     */
+    public function italic($enabled = true)
+    {
         $this->setBoolProperty('italic', $enabled);
         return $this;
     }
+
     /**
      * Print message underlined
      * @param bool $enabled
      * @return $this
      */
-    public function underline($enabled=true){
+    public function underline($enabled = true)
+    {
         $this->setBoolProperty('underline', $enabled);
         return $this;
     }
+
     /**
      * Print message blinking
      * @param bool $enabled
      * @return $this
      */
-    public function blink($enabled=true){
+    public function blink($enabled = true)
+    {
         $this->setBoolProperty('blink', $enabled);
         return $this;
     }
+
     /**
      * Print message blinking
      * @param bool $enabled
      * @return $this
      */
-    public function invert($enabled=true){
+    public function invert($enabled = true)
+    {
         $this->setBoolProperty('invert', $enabled);
         return $this;
     }
 
-    protected function setBoolProperty($propName, $enabled){
-        switch($enabled){
+    protected function setBoolProperty($propName, $enabled)
+    {
+        switch ($enabled) {
             case self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$propName]['on']);
@@ -243,17 +284,18 @@ class LogService
      * @param string $color
      * @return $this
      */
-    public function background(string $color, $wholeMessage = true){
+    public function background(string $color, $wholeMessage = true)
+    {
         $colorName = $color;
-        if(isset(self::$colorFormats['bg_'.$colorName])){
-            $colorName = 'bg_'.$colorName;
+        if (isset(self::$colorFormats['bg_' . $colorName])) {
+            $colorName = 'bg_' . $colorName;
         }
-        if(!isset(self::$colorFormats[$colorName])){
+        if (!isset(self::$colorFormats[$colorName])) {
             // unkonwn color name
             return;
         }
 
-        switch($wholeMessage){
+        switch ($wholeMessage) {
             case self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['on']);
@@ -276,14 +318,15 @@ class LogService
      * @param bool|string $color If set to false, colors are disabled, if set to true, rainbow colors are used, a color name from $colorFormats can also be used
      * @return $this
      */
-    public function color($color=true, $wholeMessage = true){
+    public function color($color = true, $wholeMessage = true)
+    {
         $colorName = $color;
-        if(!isset(self::$colorFormats[$colorName])){
+        if (!isset(self::$colorFormats[$colorName])) {
             // unkonwn color name
             return;
         }
 
-        switch($wholeMessage){
+        switch ($wholeMessage) {
             case self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['on']);
@@ -305,7 +348,8 @@ class LogService
      * @param bool $pretty
      * @return $this
      */
-    public function pretty($pretty=true){
+    public function pretty($pretty = true)
+    {
         $this->pretty = $pretty;
         return $this;
     }
@@ -315,7 +359,8 @@ class LogService
      * @param string $level
      * @return $this
      */
-    public function level(string $level){
+    public function level(string $level)
+    {
         $this->level = $level;
         return $this;
     }
@@ -324,7 +369,8 @@ class LogService
      * @param boolean $cond
      * @return $this
      */
-    public function condition(bool $cond){
+    public function condition(bool $cond)
+    {
         $this->enabled = $cond;
         return $this;
     }
@@ -335,12 +381,13 @@ class LogService
      * @param float $factor
      * @return $this
      */
-    public function withCallDepth(bool $enabled=true, string $separator = null, float $factor=null){
+    public function withCallDepth(bool $enabled = true, string $separator = null, float $factor = null)
+    {
         $this->callDepth = $enabled;
-        if(!is_null($separator)){
+        if (!is_null($separator)) {
             $this->callDepthSeparator = $separator;
         }
-        if(!is_null($factor)){
+        if (!is_null($factor)) {
             $this->callDepthFactor = $factor;
         }
 
@@ -353,29 +400,32 @@ class LogService
      * @param float $factor
      * @return $this
      */
-    public function withCaller(){
+    public function withCaller()
+    {
         $caller = $this->backtraceService->getCaller(__FUNCTION__, __CLASS__);
 
         $this->addCallerLogLine($caller);
 
         return $this;
     }
-    protected function addCallerLogLine($caller){
-        if($caller) {
+
+    protected function addCallerLogLine($caller)
+    {
+        if ($caller) {
             $logLine = "";
             if (isset($caller['short'])) {
                 $logLine = $caller['short'];
                 if (0 < $caller['line']) {
                     $logLine .= ':' . $caller['line'];
                 }
-                if(isset($caller['class'])){
+                if (isset($caller['class'])) {
                     $class = $caller['class'];
-                    if($this->endsWith($class, '_Original')){
+                    if ($this->endsWith($class, '_Original')) {
                         $class = substr($class, 0, -9);
                     }
                     $logLine .= ':' . $class;
                 }
-                if(isset($caller['function'])){
+                if (isset($caller['function'])) {
                     $logLine .= ':' . $caller['function'];
                 }
             }
@@ -384,23 +434,41 @@ class LogService
         }
     }
 
-    public function eol(){
+    public function withTiming(string $identifier): self
+    {
+        $args = func_get_args();
+        $this->timingIdentifier = \implode(':', $args);
+        $this->timing = true;
+
+        if(!isset(self::$timingLogs[$this->timingIdentifier])){
+            self::$timingLogs[$this->timingIdentifier]  = [
+                'durations' => []
+            ];
+        }
+
+        return $this;
+    }
+
+    public function eol()
+    {
         $this->writeLog();
     }
 
     /**
      * Finally write the message to the logger
      */
-    protected function writeLog(){
-        if (!$this->enabled || 0 == count($this->logs)){
+    protected function writeLog()
+    {
+        if (!$this->enabled || 0 == count($this->logs)) {
             return;
         }
 
         self::$logCounter++;
 
-        if($this->callDepth){
+        if ($this->callDepth) {
             $depthCount = \count(\debug_backtrace(false));
-            \array_unshift($this->logs, \str_repeat($this->callDepthSeparator, \max(0,(int)($depthCount*$this->callDepthFactor))));
+            \array_unshift($this->logs,
+                \str_repeat($this->callDepthSeparator, \max(0, (int)($depthCount * $this->callDepthFactor))));
         }
 
         $jsonEncodingOptions = 0;
@@ -408,78 +476,113 @@ class LogService
             $jsonEncodingOptions |= JSON_PRETTY_PRINT;
         }
 
-        foreach($this->logs as $i => $m){
-            if(!is_string($m)){
+        foreach ($this->logs as $i => $m) {
+            if (!is_string($m)) {
                 $this->logs[$i] = json_encode($m, $jsonEncodingOptions);
             }
         }
 
         $logFormat = self::$colorFormats['none'];
 
-        $color = $this->color;
-        if(true === $this->color){
-            if(!empty($this->callColorOrder)) {
-                $color = $this->callColorOrder[self::$logCounter % count($this->callColorOrder)];
+        if($this->timing){
+            $end = microtime(true);
+            $duration = $end-$this->start;
+
+            $scriptTime = $_SERVER['REQUEST_TIME_FLOAT'];
+            $durationScriptTime = ($end-$scriptTime);
+            $percentScriptTime = $duration*100/$durationScriptTime;
+
+            $cnt = 1;
+
+            if($this->timingIdentifier){
+                self::$timingLogs[$this->timingIdentifier]['durations'][] = $duration;
+                $cnt = count(self::$timingLogs[$this->timingIdentifier]['durations']);
             }
-            else{
+
+            $timingFormat = '[';
+            $timingFormat .= "\u{23F0} ".$this->numberFormat($duration, 4).'s';
+
+            $timingFormat .= ' = '.$this->numberFormat($percentScriptTime, 3).'%%';
+            $timingFormat .= ' of '.$this->numberFormat($durationScriptTime, 3).'s';
+
+            if($this->timingIdentifier) {
+                if(1 < $cnt) {
+                    $timingFormat .= ', #' . $cnt;
+                    $sumDuration = \array_sum(self::$timingLogs[$this->timingIdentifier]['durations']);
+                    $timingFormat .= ' sum '."\u{23F0} ".' ' . $this->numberFormat($sumDuration, 4) . 's';
+
+                    $percent = $sumDuration * 100 / $durationScriptTime;
+                    $timingFormat .= ' = ' . $this->numberFormat($percent, 3) . '%%';
+                }
+            }
+            $timingFormat .= ']';
+
+            $logFormat =  $timingFormat.' '.$logFormat;
+        }
+
+        $color = $this->color;
+        if (true === $this->color) {
+            if (!empty($this->callColorOrder)) {
+                $color = $this->callColorOrder[self::$logCounter % count($this->callColorOrder)];
+            } else {
                 $color = null;
             }
         }
-        if(isset(self::$colorFormats[$color])) {
+        if (isset(self::$colorFormats[$color])) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats[$color]['on'].$logFormat.''.self::$colorFormats[$color]['off'];
+            $logFormat = self::$colorFormats[$color]['on'] . $logFormat . '' . self::$colorFormats[$color]['off'];
         }
 
-        if($this->bold){
+        if ($this->bold) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats['bold']['on'].$logFormat.''.self::$colorFormats['bold']['off'];
+            $logFormat = self::$colorFormats['bold']['on'] . $logFormat . '' . self::$colorFormats['bold']['off'];
         }
-        if($this->italic){
+        if ($this->italic) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats['italic']['on'].$logFormat.''.self::$colorFormats['italic']['off'];
+            $logFormat = self::$colorFormats['italic']['on'] . $logFormat . '' . self::$colorFormats['italic']['off'];
         }
-        if($this->underline){
+        if ($this->underline) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats['underline']['on'].$logFormat.''.self::$colorFormats['underline']['off'];
+            $logFormat = self::$colorFormats['underline']['on'] . $logFormat . '' . self::$colorFormats['underline']['off'];
         }
-        if($this->blink){
+        if ($this->blink) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats['blink']['on'].$logFormat.''.self::$colorFormats['blink']['off'];
+            $logFormat = self::$colorFormats['blink']['on'] . $logFormat . '' . self::$colorFormats['blink']['off'];
         }
 
-        if($this->background && isset(self::$colorFormats[$this->background])){
+        if ($this->background && isset(self::$colorFormats[$this->background])) {
             $this->resetOnEOL = true;
 
-            $logFormat = self::$colorFormats[$this->background]['on'].$logFormat.''.self::$colorFormats[$this->background]['off'];
+            $logFormat = self::$colorFormats[$this->background]['on'] . $logFormat . '' . self::$colorFormats[$this->background]['off'];
         }
 
-        if($this->resetOnEOL){
+        if ($this->resetOnEOL) {
             $logFormat .= self::$colorFormats['reset'];
         }
 
         $level = 'debug';
-        if (isset(Logger::LOGLEVEL_MAPPING[$this->level])){
+        if (isset(Logger::LOGLEVEL_MAPPING[$this->level])) {
             $level = $this->level;
-        }
-        else {
+        } else {
             $logMapping = array_flip(Logger::LOGLEVEL_MAPPING);
-            if(isset($logMapping[$this->level])){
+            if (isset($logMapping[$this->level])) {
                 $level = $logMapping[$this->level];
             }
         }
 
         $loggerName = 'systemLogger';
         $sapiName = php_sapi_name();
-        if(isset($this->sapiLoggers[$sapiName])){
+        if (isset($this->sapiLoggers[$sapiName])) {
             $loggerName = $this->sapiLoggers[$sapiName];
-        }
-        else if(isset($this->sapiLoggers['default'])){
-            $loggerName = $this->sapiLoggers['default'];
+        } else {
+            if (isset($this->sapiLoggers['default'])) {
+                $loggerName = $this->sapiLoggers['default'];
+            }
         }
 
         $logger = $this->objectManager->get(PsrLoggerFactoryInterface::class)->get($loggerName);
@@ -495,7 +598,7 @@ class LogService
      */
     public function wLog()
     {
-        if (!$this->enabled ){
+        if (!$this->enabled) {
             return $this;
         }
 
@@ -517,8 +620,17 @@ class LogService
         return (substr($haystack, -$length) === $needle);
     }
 
-    protected function log($args){
-        if(count($this->logs) <= 0 && $this->caller) {
+    protected function numberFormat($number, $decimals=null)
+    {
+        if (isset($this->numberFormat['decimals']) && is_null($decimals)) {
+            $decimals = $this->numberFormat['decimals'];
+        }
+        return $decimals ? \number_format($number, $decimals) : $number;
+    }
+
+    protected function log($args)
+    {
+        if (count($this->logs) <= 0 && $this->caller) {
             $caller = $this->backtraceService->getCaller("wLog", false);
 
             $this->addCallerLogLine($caller);
@@ -529,10 +641,12 @@ class LogService
                 case 'boolean':
                     $this->logs[] = $arg ? 'true' : 'false';
                     break;
-                case 'integer':
                 case 'double':
+                    $this->logs[] = "" . $this->numberFormat($arg);
+                    break;
+                case 'integer':
                 case 'string':
-                    $this->logs[] = "".$arg;
+                    $this->logs[] = "" . $arg;
                     break;
                 case 'NULL':
                     $this->logs[] = 'NULL';
@@ -543,8 +657,8 @@ class LogService
                 default:
                     if (is_object($arg)) {
                         $rendered = false;
-                        foreach($this->logRenderer as $objectName => $how){
-                            if($arg instanceof $objectName){
+                        foreach ($this->logRenderer as $objectName => $how) {
+                            if ($arg instanceof $objectName) {
                                 $this->appendRenderedObject($how, $arg);
                                 $rendered = true;
                                 break;
@@ -554,16 +668,17 @@ class LogService
                             $this->appendRenderedObject(ObjectRenderer::class, $arg);
                         }
                     }
-                    // "resource" or "unknown type" is ignored
+                // "resource" or "unknown type" is ignored
             }
         }
     }
 
-    protected function appendRenderedObject($how, $arg){
+    protected function appendRenderedObject($how, $arg)
+    {
         $renderer = $this->objectManager->get($how);
 
         $line = $renderer->render($this, $arg);
-        if(!is_array($line)) {
+        if (!is_array($line)) {
             $line = [$line];
         }
 
