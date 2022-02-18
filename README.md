@@ -368,6 +368,12 @@ To reduce the amount of log messages a condition can be added
 wLog("problem node", $node)->condition($node->getName() == 'node-og6r6je5wpwnd');
 ```
 
+##### Timing
+
+To determine how long a method is running and how often it is called
+```
+wLog(__METHOD__, __LINE__, $interestingArgument)->withTiming(__METHOD__, __LINE__);
+```
 
 #### Custom Log Renderer
 
