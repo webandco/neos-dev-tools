@@ -56,21 +56,23 @@ class SignalLogAspect
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.signal.regex")
      * @var string
      */
-    protected $regex = '.*';
+    protected $regex = '/.*/';
+
+    /**
+     * @Flow\Inject(lazy=false)
+     * @var Bootstrap
+     */
+    //protected $bootstrap;
 
     /**
      * Passes the signal over to the Dispatcher
      *
-     * @Flow\Before("methodAnnotatedWith(Neos\Flow\Annotations\Signal)")
+     * @Flow\Before("setting(Webandco.DevTools.log.signal.enabled) && methodAnnotatedWith(Neos\Flow\Annotations\Signal)")
      * @param JoinPointInterface $joinPoint The current join point
      * @return void
      */
     public function logSignal(JoinPointInterface $joinPoint)
     {
-        if(false === $this->enabled){
-            return;
-        }
-
         $signalClassName = $joinPoint->getClassName();
         $signalArguments = $joinPoint->getMethodArguments();
         $signalName = lcfirst(str_replace('emit', '', $joinPoint->getMethodName()));
@@ -133,5 +135,34 @@ class SignalLogAspect
                          ->wLog(...$loggedArguments)
                          ->wLog(')->')->wLog(count($loggedSlots) ? $loggedSlots : 'no slots defined')
                          ->eol();
+    }
+
+    /**
+     * Around advice, logs time a signal took to process
+     *
+     * @param JoinPointInterface $joinPoint
+     * @return mixed Result of the target method
+     * @Flow\Around("setting(Webandco.DevTools.log.signal.enabled) && method(Neos\Flow\SignalSlot\Dispatcher->dispatch())")
+     */
+    public function logSignalDispatchTime(JoinPointInterface $joinPoint) {
+        $start = microtime(true);
+        $joinPoint->getClassName();
+        $result = $joinPoint->getAdviceChain()->proceed($joinPoint);
+        $end = microtime(true);
+        $fromScriptStart = $end-$_SERVER['REQUEST_TIME_FLOAT'];
+        $time = microtime(true)-$start;
+        $percent = $time*100/$fromScriptStart;
+
+        $signalDestination = $joinPoint->getClassName().'::'.$joinPoint->getMethodName();
+
+        if(1 !== preg_match($this->regex, $signalDestination)){
+            return;
+        }
+
+        $this->logService->pretty(false)
+            ->wLog('signal ', $signalDestination, ' took ' . $time.' s ( ' . $percent . '%)')
+            ->eol();
+
+        return $result;
     }
 }

@@ -52,6 +52,10 @@ Webandco:
         enabled: false
         # regex for signalClassName::signalName
         regex: '/.*/'
+      controller:
+        enabled: false
+        # regex for controllerClassName::actionMethodName
+        regex: '/.*/'
     stopwatch:
       emitSignals: false
       tree:
