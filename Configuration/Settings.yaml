@@ -31,7 +31,12 @@ Webandco:
         enabled: false
         separator: ' '
         factor: 1
-      caller: false
+      caller:
+        enable: true
+        path: false
+        class: true
+        method: true
+        line: true
       pretty: true
       color: true
       colorCallOrder:
@@ -56,6 +61,14 @@ Webandco:
         enabled: false
         # regex for controllerClassName::actionMethodName
         regex: '/.*/'
+      hexDump:
+        highlightBinary: 'invert'
+        lineSeparator: "\n"
+        # 48 chars is nice for large screens, 16 might be better for narrower console output
+        bytesPerLine: 48
+        # use paddingCharacter for binary data
+        paddingCharacter: '.'
+        logArray: false
     stopwatch:
       emitSignals: false
       tree:

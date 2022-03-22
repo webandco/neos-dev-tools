@@ -261,7 +261,7 @@ Without the Stopwatch this method took around 6 seconds in the tested project.
 #### Performance
 
 From a few tests it seems that excessive use of Stopwatch can double the original runtime without
-signals. Using signals seems to triple the original runtime without a stopwatch.
+signals. Using signals seems to triple the original runtime compared to without a stopwatch.
 
 ### Logging
 
@@ -293,43 +293,12 @@ wLog("First line")->wLog("Second line");
 
 #### Configuration
 
-An example configuration could be like this:
-
-```
-Webandco:
-  DevTools:
-    log:
-      enabled: true
-      callDepth:
-        enabled: false
-        separator: ' '
-        factor: 1
-      caller: false
-      pretty: true
-      color: true
-      colorCallOrder:
-        - 'green'
-        - 'cyan'
-        - 'blue'
-        - 'magenta'
-        - 'yellow'
-        - 'red'
-      level: 'debug'
-      renderer:
-        Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
-        Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
-        Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
-        Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
-      signal:
-        enabled: false
-        # regex for signalClassName::signalName
-        regex: '/.*allObjectsPersisted$/'
-```
+See [Configuration/Settings.yaml](Configuration/Settings.yaml).
 
 * enabled: To enable or disable logging to SystemLogger. The global method `wLog()` is created always.
 * pretty: In case a complex object is given as an argument, the object is logged using `json_encode`.
 If `pretty` is `true` the option `JSON_PRETTY_PRINT` is used for those arguments.
-* color: If set to `true` every new log message is printed in a new color. Thus you get a colored system log
+* color: If set to `true` every new log message is printed in a new color. Thus you get a rainbow colored system log
 and maybe some issues or patterns might be easier to spot.
 The color can also be fixed using any of the names
 `none, bold, dark, italic, underline, blink, concealed, black, red, green, yellow,
@@ -339,7 +308,7 @@ bg_blue, bg_magenta, bg_cyan, bg_white`.
 `emergency, alert, critical, error, warning, notice, info, debug`
 * renderer: For custom objects you can provide a custom renderer which implements
 the [LogRendererInterface.php](./Classes/Service/Log/LogRendererInterface.php)
-* signal: If enabled the emitted signals and their corresponding slots are logged using the DevTools log facility 
+* signal: If enabled the emitted signals and their corresponding slots are logged using the DevTools log facility (aka `wLog()`)
 
 ##### Overrule config
 
@@ -372,8 +341,45 @@ wLog("problem node", $node)->condition($node->getName() == 'node-og6r6je5wpwnd')
 
 To determine how long a method is running and how often it is called
 ```
-wLog(__METHOD__, __LINE__, $interestingArgument)->withTiming(__METHOD__, __LINE__);
+function someMethod(){
+$wLog = wLog(__METHOD__, __LINE__, $interestingArgument)->withTiming(__METHOD__, __LINE__);
+....
+}
 ```
+
+Example output
+```
+22-03-22 15:14:50 28         DEBUG                          [⏰ 0.0244s = 1.477% of 1.653s] Webco\Test\Service\TestService_Original::someMethod 371
+```
+
+##### Hex dump
+
+A modified version of https://stackoverflow.com/a/34279537 allows to log a string in hex dump like format
+
+```
+wLog()->hexDump($fusionValueWithCacheMarkers);
+```
+
+with an output like this
+
+![hexdump.png](Documentation/hexdump.png)
+
+By default, binary is inverted in the console. In this example the fusion cache markers can be seen.
+
+Hexdump has the following configuration options:
+* highlightBinary: How to highlight binary. Default is to use the "color" `invert`
+* lineSeparator: The lineseparator to use. Default "\n"
+* bytesPerLine: How many bytes should be shown per line. Default 48
+* paddingCharacter: The chatacter to use for binary. Default `.`
+
+##### Caller
+
+By default the caller of `wLog()` is determined and written to the log
+```
+22-03-22 16:05:06 35         DEBUG                          Webco\Test\Service\TestService:testMethod:433 some log message
+```
+
+It takes around 0.2 ms to determine the caller. This can be disabled via `Webandco.DevTools.log.caller.enable` in [Settings.yaml](./Configuration/Settings.yaml).
 
 #### Custom Log Renderer
 
@@ -403,11 +409,6 @@ from the backtrace.
 
 The method `BacktraceService::getCaller()` returns caller file, line, class and method
 for a given method and class and uses `Neos\Flow\Error\Debugger`.
-
-WIP: The goal is that, for example, `$this->backtraceService->getCaller(__FUNCTION__, self::class);` ignores
-the interfering aspects or proxy magic from FLOW and returns the caller for the current method.
-
-The method is still work in progress and will surely be refactored in the future.
 
 ##### Log format mixing in one line
 

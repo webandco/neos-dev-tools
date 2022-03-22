@@ -47,9 +47,9 @@ class LogService
 
     /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.caller")
-     * @var boolean
+     * @var array
      */
-    protected $caller = false;
+    protected $caller = [];
 
     /**
      * Debug level to use for logger
@@ -90,6 +90,13 @@ class LogService
      * @var float
      */
     protected $callDepthFactor = 1.0;
+
+    /**
+     * Indent the log messages by the depth given by debug_backtrace
+     * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.hexDump")
+     * @var array
+     */
+    protected $hexdumpConfig = [];
 
     /**
      * @var boolean
@@ -412,23 +419,26 @@ class LogService
     protected function addCallerLogLine($caller)
     {
         if ($caller) {
-            $logLine = "";
-            if (isset($caller['short'])) {
-                $logLine = $caller['short'];
-                if (0 < $caller['line']) {
-                    $logLine .= ':' . $caller['line'];
-                }
-                if (isset($caller['class'])) {
-                    $class = $caller['class'];
-                    if ($this->endsWith($class, '_Original')) {
-                        $class = substr($class, 0, -9);
-                    }
-                    $logLine .= ':' . $class;
-                }
-                if (isset($caller['function'])) {
-                    $logLine .= ':' . $caller['function'];
-                }
+            $logLine = [];
+            if ($this->caller['path'] && isset($caller['short'])) {
+                $logLine[] = $caller['short'];
             }
+
+            if ($this->caller['class'] && isset($caller['class'])) {
+                $class = $caller['class'];
+                if ($this->endsWith($class, '_Original')) {
+                    $class = substr($class, 0, -9);
+                }
+                $logLine[] =$class;
+            }
+            if ($this->caller['method'] && isset($caller['function'])) {
+                $logLine[] = $caller['function'];
+            }
+            if ($this->caller['line'] && 0 < $caller['line']) {
+                $logLine[] =  $caller['line'];
+            }
+
+            $logLine = \implode(':', $logLine);
 
             array_unshift($this->logs, $logLine);
         }
@@ -445,6 +455,74 @@ class LogService
                 'durations' => []
             ];
         }
+
+        return $this;
+    }
+
+    /**
+     * From https://stackoverflow.com/a/34279537
+     *
+     * Dumps a string into a traditional hex dump for programmers,
+     * in a format similar to the output of the BSD command hexdump -C file.
+     * The default result is a string.
+     * Supported options:
+     * <pre>
+     *   line_sep        - line seperator char, default = "\n"
+     *   bytes_per_line  - default = 16
+     *   pad_char        - character to replace non-readble characters with, default = '.'
+     * </pre>
+     *
+     * @param string $string
+     * @param array $options
+     * @param string|array
+     */
+    public function hexDump(string $string, array $options = null) {
+        if (!is_array($options)) {
+            $options = [];
+        }
+
+        $highlightBinaryOption = $this->hexdumpConfig['highlightBinary'];
+        $highlightBinary = [ 'on' => '', 'off' => '' ];
+        if(isset(self::$colorFormats[$highlightBinaryOption])){
+            $highlightBinary = self::$colorFormats[$highlightBinaryOption];
+        }
+
+        $line_sep       = $this->hexdumpConfig['lineSeparator'] ?? $options['lineSeparator'] ?? "\n";
+        $bytes_per_line = $this->hexdumpConfig['bytesPerLine'] ?? $options['bytesPerLine'] ?? 16;
+        $pad_char       = $this->hexdumpConfig['paddingCharacter'] ?? $options['paddingCharacter'] ?? '.';
+        $logArray       = $this->hexdumpConfig['logArray'] ?? $options['logArray'] ?? false;
+
+        $text_lines = str_split($string, $bytes_per_line);
+        $hex_lines  = str_split(bin2hex($string), $bytes_per_line * 2);
+
+        $offset = 0;
+        $output = [];
+        $bytes_per_line_div_2 = (int)($bytes_per_line / 2);
+        foreach ($hex_lines as $i => $hex_line) {
+            $text_line = $text_lines[$i];
+            $output []=
+                sprintf('%08X',$offset) .
+                preg_replace(
+                    '/ ([0,1].|7f|[8-f].)/',
+                    ' ' . $highlightBinary['on'] . '${1}' . $highlightBinary['off'],
+                    '  ' .str_pad(
+                        strlen($text_line) > $bytes_per_line_div_2
+                            ?
+                            implode(' ', str_split(substr($hex_line,0,$bytes_per_line),2)) . '  ' .
+                            implode(' ', str_split(substr($hex_line,$bytes_per_line),2))
+                            :
+                            implode(' ', str_split($hex_line,2))
+                        , $bytes_per_line * 3)
+                ) .
+                '  |' . preg_replace('/[^\x20-\x7E]/', $highlightBinary['on'].$pad_char.$highlightBinary['off'], $text_line) . '|';
+            $offset += $bytes_per_line;
+        }
+        $output []= sprintf('%08X', strlen($string));
+        $output []= sprintf('string length in bytes: %d', strlen($string));
+
+        $output = $logArray ? $output : "\n".\implode($line_sep, $output) . $line_sep;
+
+        $this->wLog($output);
 
         return $this;
     }
@@ -603,9 +681,7 @@ class LogService
         }
 
         $args = func_get_args();
-        if (0 < count($args)) {
-            $this->log($args);
-        }
+        $this->log($args);
 
         return $this;
     }
@@ -630,10 +706,14 @@ class LogService
 
     protected function log($args)
     {
-        if (count($this->logs) <= 0 && $this->caller) {
-            $caller = $this->backtraceService->getCaller("wLog", false);
-
+        // determine the caller takes around 0.2 ms
+        if (isset($this->caller['enable']) && count($this->logs) === 0){
+            $caller = $this->backtraceService->getCaller("wLog");
             $this->addCallerLogLine($caller);
+        }
+
+        if(count($args) === 0){
+            return;
         }
 
         foreach ($args as $arg) {

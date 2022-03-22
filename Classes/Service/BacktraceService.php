@@ -17,21 +17,23 @@ class BacktraceService {
     public function getCaller($method, $class=null, $ignoreAspect=true) {
         $caller = [];
 
-        $this->iterateTrace(function($k, $step) use($caller, $method, $class, $ignoreAspect){
+        $this->iterateTrace(function($k, $step, $trace) use(&$caller, $method, $class, $ignoreAspect){
             $ok = false;
 
             if(isset($step['function']) && $step['function'] == $method){
-                if((is_null($class) && !isset($step['class'])) || is_null($class) || (!is_null($class) && isset($step['class']) && $step['class'] == $class)){
+                $stepClass = $step['class'] ?? null;
+                if(empty($stepClass)){
+                    if(empty($class)){
+                        $ok = true;
+                    }
+                } elseif(\is_a($step['class'], $class)) {
                     $ok = true;
                 }
             }
 
             if($ok){
                 $caller = $step;
-                unset($caller['function']);
-                if(isset($caller['class'])){
-                    unset($caller['class']);
-                }
+                unset($caller['function'], $caller['class']);
 
                 if(isset($trace[$k+1]) && isset($trace[$k+1]['function'])){
                     $caller['function'] = $trace[$k+1]['function'];
@@ -44,7 +46,7 @@ class BacktraceService {
             }
 
             return true;
-        });
+        }, true);
 
         if(count($caller)) {
             return $caller;
@@ -64,7 +66,7 @@ class BacktraceService {
                 $trace[$index]['proxy'] = $proxy['proxy'];
             }
 
-            if(!$closure($index, $trace[$index])){
+            if(!$closure($index, $trace[$index], $trace)){
                 break;
             }
         }
