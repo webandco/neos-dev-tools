@@ -77,7 +77,7 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function start(string $name, string $category = null) {
+    public function start(string $name, ?string $category = null) :StopwatchEvent {
         $this->startedEvents[] = $name;
 
         $res = parent::start($name, $category);
@@ -102,7 +102,7 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function lap(string $name){
+    public function lap(string $name) : StopwatchEvent{
         $res = parent::lap($name);
         if($this->emitSignals) {
             $this->emitStopwatchLap($this, $name);
@@ -124,7 +124,7 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function stop(string $name=null){
+    public function stop(string $name) : StopwatchEvent{
         if (!is_null($name)) {
             $idx = array_search($name, $this->startedEvents);
             if (false !== $idx) {
