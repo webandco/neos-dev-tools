@@ -4,7 +4,7 @@
     "name": "webandco/neos-dev-tools",
     "require": {
         "neos/flow": "*",
-        "symfony/stopwatch": "^5.0"
+        "symfony/stopwatch": ">=5.0"
     },
     "autoload": {
         "psr-4": {
