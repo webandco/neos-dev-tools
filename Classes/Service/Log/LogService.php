@@ -2,6 +2,7 @@
 namespace Webandco\DevTools\Service\Log;
 
 use Neos\Flow\Annotations as Flow;
+use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\Debugger;
 use Neos\Flow\Log\Psr\Logger;
 use Neos\Flow\Log\PsrLoggerFactoryInterface;
@@ -210,7 +211,22 @@ class LogService
      */
     protected static $timingLogs = [];
 
+    /**
+     * PHP seems to destroy objects in reverse order as they had been created if they are independent
+     * previousInstance is used to create a chain of LogService instances to force php to destruct the objects
+     * in calling order. This should make using eof() unnecessary
+     * @var LogService the previously created instance
+     */
+    protected $previousInstance = null;
+    /**
+     * @var null the latest initialized instance
+     */
+    protected static $currentInstance = null;
+
     public function initializeObject() {
+        $this->previousInstance = self::$currentInstance;
+        self::$currentInstance = $this;
+
         $this->start = microtime(true);
     }
 
@@ -643,6 +659,15 @@ class LogService
             $logFormat .= self::$colorFormats['reset'];
         }
 
+        $this->writeToLog(
+            sprintf($logFormat, implode(' ', $this->logs))
+        );
+
+        $this->logs = [];
+    }
+
+    protected function writeToLog(string $message){
+
         $level = 'debug';
         if (isset(Logger::LOGLEVEL_MAPPING[$this->level])) {
             $level = $this->level;
@@ -663,11 +688,8 @@ class LogService
             }
         }
 
-        $logger = $this->objectManager->get(PsrLoggerFactoryInterface::class)->get($loggerName);
-        $message = sprintf($logFormat, implode(' ', $this->logs));
+        $logger = $this->getObjectManager()->get(PsrLoggerFactoryInterface::class)->get($loggerName);
         $logger->$level($message);
-
-        $this->logs = [];
     }
 
     /**
@@ -753,9 +775,13 @@ class LogService
         }
     }
 
+    protected function getObjectManager(){
+        return $this->objectManager ?? Bootstrap::$staticObjectManager;
+    }
+
     protected function appendRenderedObject($how, $arg)
     {
-        $renderer = $this->objectManager->get($how);
+        $renderer = $this->getObjectManager()->get($how);
 
         $line = $renderer->render($this, $arg);
         if (!is_array($line)) {
