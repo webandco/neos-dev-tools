@@ -39,6 +39,7 @@ namespace Webandco\DevTools {
 namespace {
 
     use Webandco\DevTools\Service\Log\LogService;
+    use Webandco\DevTools\Service\Log\LogServiceFluentTerminator;
 
     /**
      * @return LogService
@@ -48,6 +49,9 @@ namespace {
 
         $logService = new LogService();
 
-        return call_user_func_array([$logService, 'wLog'], $args);
+        //return call_user_func_array([$logService, 'wLog'], $args);
+        call_user_func_array([$logService, 'wLog'], $args);
+
+        return new LogServiceFluentTerminator();
     }
 }
