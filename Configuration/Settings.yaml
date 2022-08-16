@@ -21,6 +21,16 @@ Webandco:
     nodePublished:
       use: false
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
+    runtimeStats:
+      enabled: true
+      excludeClasses:
+        - 'TYPO3Fluid\Fluid\Core\Variables\StandardVariableProvider'
+        - 'Neos\FluidAdaptor\Core\ViewHelper\TemplateVariableContainer'
+        - 'TYPO3Fluid\Fluid\Core\Variables\ChainedVariableProvider'
+        - 'TYPO3Fluid\Fluid\Core\Variables\JSONVariableProvider'
+      expression: null
+      #expression: 'within(Neos\Neos\Fusion\MenuItemsImplementation) && method(.*->.*())'
+      #expression: 'within(Neos\Flow\Mvc\Controller\ControllerInterface) && method(.*->.*Action())'
     log:
       enabled: true
       numberFormat:
