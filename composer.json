@@ -1,6 +1,6 @@
 {
     "description": "Tools for Neos development",
-    "type": "neos-package",
+    "type": "neos-webandco",
     "name": "webandco/neos-dev-tools",
     "require": {
         "neos/flow": "*",
@@ -12,6 +12,7 @@
         }
     },
     "extra": {
+        "installer-name": "Webandco.DevTools",
         "neos": {
             "package-key": "Webandco.DevTools"
         }
