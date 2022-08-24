@@ -217,15 +217,18 @@ class LogService
      * in calling order. This should make using eof() unnecessary
      * @var LogService the previously created instance
      */
-    protected $previousInstance = null;
-    /**
-     * @var null the latest initialized instance
-     */
-    protected static $currentInstance = null;
+    protected static $activeInstance = null;
+
+    public static function getActiveInstance(){
+        return self::$activeInstance;
+    }
 
     public function initializeObject() {
-        $this->previousInstance = self::$currentInstance;
-        self::$currentInstance = $this;
+        if (self::$activeInstance) {
+            // force write the log entry
+            self::$activeInstance->eol();
+        }
+        self::$activeInstance = $this;
 
         $this->start = microtime(true);
     }
@@ -664,6 +667,10 @@ class LogService
         );
 
         $this->logs = [];
+
+        if(self::$activeInstance === $this) {
+            self::$activeInstance = null;
+        }
     }
 
     protected function writeToLog(string $message){
