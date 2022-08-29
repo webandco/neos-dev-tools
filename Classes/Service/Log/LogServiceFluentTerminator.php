@@ -24,6 +24,9 @@ class LogServiceFluentTerminator
 
     public function __destruct()
     {
-        LogService::getActiveInstance()->eol();
+        $instance = LogService::getActiveInstance();
+        if($instance){
+            $instance->eol();
+        }
     }
 }
