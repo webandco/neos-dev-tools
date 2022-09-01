@@ -6,6 +6,7 @@ use Neos\Flow\Core\Bootstrap;
 use Neos\Flow\Error\Debugger;
 use Neos\Flow\Log\Psr\Logger;
 use Neos\Flow\Log\PsrLoggerFactoryInterface;
+use Neos\Flow\Log\Utility\LogEnvironment;
 use Neos\Flow\ObjectManagement\ObjectManagerInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
@@ -48,9 +49,15 @@ class LogService
 
     /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="log.caller")
+     * @var bool
+     */
+    protected $caller = false;
+
+    /**
+     * The caller that has been detected. The array contains path, class, method and line if available
      * @var array
      */
-    protected $caller = [];
+    protected $detectedCaller = [];
 
     /**
      * Debug level to use for logger
@@ -441,6 +448,7 @@ class LogService
             $logLine = [];
             if ($this->caller['path'] && isset($caller['short'])) {
                 $logLine[] = $caller['short'];
+                $this->detectedCaller['path'] = $caller['short'];
             }
 
             if ($this->caller['class'] && isset($caller['class'])) {
@@ -449,12 +457,16 @@ class LogService
                     $class = substr($class, 0, -9);
                 }
                 $logLine[] =$class;
+
+                $this->detectedCaller['class'] = $class;
             }
             if ($this->caller['method'] && isset($caller['function'])) {
                 $logLine[] = $caller['function'];
+                $this->detectedCaller['method'] = $caller['function'];
             }
             if ($this->caller['line'] && 0 < $caller['line']) {
                 $logLine[] =  $caller['line'];
+                $this->detectedCaller['line'] = $caller['line'];
             }
 
             $logLine = \implode(':', $logLine);
@@ -696,7 +708,13 @@ class LogService
         }
 
         $logger = $this->getObjectManager()->get(PsrLoggerFactoryInterface::class)->get($loggerName);
-        $logger->$level($message);
+
+        $logContext = [];
+        if (isset($this->detectedCaller['class'])) {
+            $logContext = LogEnvironment::fromMethodName($this->detectedCaller['class'].'::'.$this->detectedCaller['method']);
+        }
+
+        $logger->$level($message, $logContext);
     }
 
     /**
