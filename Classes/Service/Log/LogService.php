@@ -783,16 +783,22 @@ class LogService
                     break;
                 default:
                     if (is_object($arg)) {
-                        $rendered = false;
-                        foreach ($this->logRenderer as $objectName => $how) {
-                            if ($arg instanceof $objectName) {
-                                $this->appendRenderedObject($how, $arg);
-                                $rendered = true;
-                                break;
+                        if ($arg instanceof \stdClass) {
+                            $this->logs[] = $arg;
+                        } else {
+                            $rendered = false;
+
+                            foreach ($this->logRenderer as $objectName => $how) {
+                                if ($arg instanceof $objectName) {
+                                    $this->appendRenderedObject($how, $arg);
+                                    $rendered = true;
+                                    break;
+                                }
                             }
-                        }
-                        if (!$rendered) {
-                            $this->appendRenderedObject(ObjectRenderer::class, $arg);
+
+                            if (!$rendered) {
+                                $this->appendRenderedObject(ObjectRenderer::class, $arg);
+                            }
                         }
                     }
                 // "resource" or "unknown type" is ignored
