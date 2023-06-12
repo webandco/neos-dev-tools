@@ -297,12 +297,12 @@ class LogService
 
     protected function setBoolProperty($propName, $enabled)
     {
-        switch ($enabled) {
-            case self::FORMAT_ON:
+        switch (true) {
+            case $enabled === self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$propName]['on']);
                 break;
-            case self::FORMAT_OFF:
+            case $enabled === self::FORMAT_OFF:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$propName]['off']);
                 break;
@@ -328,12 +328,12 @@ class LogService
             return;
         }
 
-        switch ($wholeMessage) {
-            case self::FORMAT_ON:
+        switch (true) {
+            case $wholeMessage === self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['on']);
                 break;
-            case self::FORMAT_OFF:
+            case $wholeMessage === self::FORMAT_OFF:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['off']);
                 break;
@@ -359,12 +359,12 @@ class LogService
             return;
         }
 
-        switch ($wholeMessage) {
-            case self::FORMAT_ON:
+        switch (true) {
+            case $wholeMessage === self::FORMAT_ON:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['on']);
                 break;
-            case self::FORMAT_OFF:
+            case $wholeMessage === self::FORMAT_OFF:
                 $this->resetOnEOL = true;
                 $this->wLog(self::$colorFormats[$colorName]['off']);
                 break;
