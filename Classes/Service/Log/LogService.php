@@ -179,14 +179,14 @@ class LogService
         'cyan' =>       ['on' => "\033[36m", 'off' => "\033[39m"],
         'white' =>      ['on' => "\033[37m", 'off' => "\033[39m"],
         // background colors
-        'bg_black' =>   ['begin' => "\033[40m", 'off' => "\033[49m"],
-        'bg_red' =>     ['begin' => "\033[41m", 'off' => "\033[49m"],
-        'bg_green' =>   ['begin' => "\033[42m", 'off' => "\033[49m"],
-        'bg_yellow' =>  ['begin' => "\033[43m", 'off' => "\033[49m"],
-        'bg_blue' =>    ['begin' => "\033[44m", 'off' => "\033[49m"],
-        'bg_magenta' => ['begin' => "\033[45m", 'off' => "\033[49m"],
-        'bg_cyan' =>    ['begin' => "\033[46m", 'off' => "\033[49m"],
-        'bg_white' =>   ['begin' => "\033[47m", 'off' => "\033[49m"],
+        'bg_black' =>   ['on' => "\033[40m", 'off' => "\033[49m"],
+        'bg_red' =>     ['on' => "\033[41m", 'off' => "\033[49m"],
+        'bg_green' =>   ['on' => "\033[42m", 'off' => "\033[49m"],
+        'bg_yellow' =>  ['on' => "\033[43m", 'off' => "\033[49m"],
+        'bg_blue' =>    ['on' => "\033[44m", 'off' => "\033[49m"],
+        'bg_magenta' => ['on' => "\033[45m", 'off' => "\033[49m"],
+        'bg_cyan' =>    ['on' => "\033[46m", 'off' => "\033[49m"],
+        'bg_white' =>   ['on' => "\033[47m", 'off' => "\033[49m"],
     ];
 
     protected $resetOnEOL = false;
