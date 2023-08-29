@@ -2,6 +2,7 @@
     "description": "Tools for Neos development",
     "type": "neos-webandco",
     "name": "webandco/neos-dev-tools",
+    "license": "MIT",
     "require": {
         "neos/flow": "*",
         "symfony/stopwatch": ">=6.0"
