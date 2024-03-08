@@ -63,6 +63,10 @@ Webandco:
         Neos\ContentRepository\Domain\Model\NodeInterface: Webandco\DevTools\Service\Log\NodeInterfaceRenderer
         Neos\ContentRepository\Domain\Model\NodeData: Webandco\DevTools\Service\Log\NodeDataRenderer
         Neos\Fusion\FusionObjects\AbstractFusionObject: Webandco\DevTools\Service\Log\AbstractFusionObjectRenderer
+        Neos\Flow\Security\Authorization\Privilege\PrivilegeSubjectInterface: Webandco\DevTools\Service\Log\PrivilegeSubjectInterfaceRenderer
+        Neos\ContentRepository\Domain\Model\NodeType: Webandco\DevTools\Service\Log\NodeTypeRenderer
+        Neos\Flow\Security\Authorization\Privilege\PrivilegeInterface: Webandco\DevTools\Service\Log\PrivilegeInterfaceRenderer
+        Neos\Flow\Aop\JoinPointInterface: Webandco\DevTools\Service\Log\JoinPointInterfaceRenderer
       signal:
         enabled: false
         # regex for signalClassName::signalName
