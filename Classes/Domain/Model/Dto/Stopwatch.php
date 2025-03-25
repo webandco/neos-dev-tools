@@ -15,21 +15,21 @@ class Stopwatch extends SymfonyStopwatch
     const FORMAT_AS_STRING = 1;
     const FORMAT_AS_ARRAY = 2;
 
-    protected $metaData = [];
+    protected array $metaData = [];
 
-    protected $startedEvents = [];
+    protected array $startedEvents = [];
 
     /**
      * @Flow\InjectConfiguration(package="Webandco.DevTools", path="stopwatch.emitSignals")
      * @var boolean
      */
-    protected $emitSignals = false;
+    protected bool $emitSignals = false;
 
-    public function enableSignals(){
+    public function enableSignals() : self {
         $this->emitSignals = true;
         return $this;
     }
-    public function disableSignals(){
+    public function disableSignals() : self {
         $this->emitSignals = false;
         return $this;
     }
@@ -40,12 +40,11 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $id
      * @return $this
      */
-    public function openSection(string $id = null) {
+    public function openSection(string $id = null) : void {
         parent::openSection($id);
         if($this->emitSignals) {
             $this->emitStopwatchOpenSection($this, $id);
         }
-        return $this;
     }
 
     /**
@@ -171,12 +170,11 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $id
      * @return $this
      */
-    public function stopSection(string $id = null){
+    public function stopSection(string $id = null) : void {
         parent::stopSection($id);
         if($this->emitSignals) {
             $this->emitStopwatchStopSection($this, $id);
         }
-        return $this;
     }
 
     /**
@@ -279,7 +277,7 @@ class Stopwatch extends SymfonyStopwatch
             case self::FORMAT_AS_ARRAY:
                 return [$ms, $sec, $min, $hours];
             default:
-                return sprintf("%02d:%02d:%02d.%03d", $hours,$min,$sec,$ms);;
+                return sprintf("%02d:%02d:%02d.%03d", $hours,$min,$sec,$ms);
         }
     }
 
