@@ -88,18 +88,37 @@ abstract class AbstractRuntimeStatsFilter implements PointcutFilterInterface
         $configurationManager = Bootstrap::$staticObjectManager->get(ConfigurationManager::class);
         $runtimeStats = $configurationManager->getConfiguration(ConfigurationManager::CONFIGURATION_TYPE_SETTINGS, 'Webandco.DevTools.runtimeStats');
 
+        if ($runtimeStats['enabled'] !== true) {
+            return new ClassNameIndex();
+        }
+
         $configuredExcludedClassNames = $runtimeStats['excludeClasses'];
+        $configuredIncludedClassNames = $runtimeStats['includeClasses'];
 
         $classNames = $classNameIndex->getClassNames();
-        $allowedClassNames = \array_filter($classNames, function($className) use($configuredExcludedClassNames){
-            if(\in_array($className, $configuredExcludedClassNames)){
+        $allowedClassNames = \array_filter($classNames, function($className) use($configuredExcludedClassNames, $configuredIncludedClassNames) {
+            if (empty($configuredExcludedClassNames) && empty($configuredIncludedClassNames)) {
                 return false;
             }
-            foreach($configuredExcludedClassNames as $regex){
+
+            if (\in_array($className, $configuredIncludedClassNames)) {
+                return true;
+            }
+            if (\in_array($className, $configuredExcludedClassNames)) {
+                return false;
+            }
+
+            foreach ($configuredIncludedClassNames as $regex) {
+                try {
+                    if (\preg_match($regex, $className)) {
+                        return true;
+                    }
+                }catch(\Exception $e){}
+            }
+            foreach ($configuredExcludedClassNames as $regex) {
                 try {
                     if (\preg_match($regex, $className)) {
                         return false;
-
                     }
                 }catch(\Exception $e){}
             }

@@ -22,12 +22,16 @@ Webandco:
       use: false
       file: '%FLOW_PATH_ROOT%.WebandcoNeosDevToolsLastPublished'
     runtimeStats:
-      enabled: true
+      enabled: false
+      includeClasses: []
       excludeClasses:
+        # Neos < 9
         - 'TYPO3Fluid\Fluid\Core\Variables\StandardVariableProvider'
         - 'Neos\FluidAdaptor\Core\ViewHelper\TemplateVariableContainer'
         - 'TYPO3Fluid\Fluid\Core\Variables\ChainedVariableProvider'
         - 'TYPO3Fluid\Fluid\Core\Variables\JSONVariableProvider'
+        # Neos >= 9
+        - 'Neos\Neos\Domain\Model\UserId'
       expression: null
       #expression: 'within(Neos\Neos\Fusion\MenuItemsImplementation) && method(.*->.*())'
       #expression: 'within(Neos\Flow\Mvc\Controller\ControllerInterface) && method(.*->.*Action())'

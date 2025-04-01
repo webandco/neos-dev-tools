@@ -84,9 +84,10 @@ class RuntimeStatsAspect
         $percent = $time*100/$fromScriptStart;
 
         $i = count($this->executionLog);
+        $seperator = 1 < $i ? \sprint('%'.$i.'s', ' ') : '';
 
         // excludes view rendering
-        $msg = sprintf('runtime stats %'.$i.'s %s took %.3f s (%.3f) duration (%.3f s / avg %.3f s) called %d times', ' ', $method, $time, $percent, $duration, $avgDuration, $this->stats[$method]['cnt']);
+        $msg = sprintf('runtime stats %s%s took %.3f s (%.3f) duration (%.3f s / avg %.3f s) called %d times', $seperator, $method, $time, $percent, $duration, $avgDuration, $this->stats[$method]['cnt']);
         $this->logService->pretty(false)->wLog($msg)->eol();
     }
 }
