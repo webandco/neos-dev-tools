@@ -60,7 +60,7 @@ Webandco:
         - 'magenta'
         - 'yellow'
         - 'red'
-      level: 'debug'
+      level: 'warning'
       renderer:
         Webandco\DevTools\Domain\Model\Dto\Stopwatch: Webandco\DevTools\Service\Stopwatch\StopwatchLogRenderer
         Throwable: Webandco\DevTools\Service\Log\ThrowableLogRenderer
