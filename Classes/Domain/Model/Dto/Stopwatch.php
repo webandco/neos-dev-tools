@@ -10,7 +10,7 @@ use Webandco\DevTools\Service\BacktraceService;
 /**
  * A DTO for storing information related to a stopwatch
  */
-class Stopwatch extends SymfonyStopwatch
+class Stopwatch
 {
     const FORMAT_AS_STRING = 1;
     const FORMAT_AS_ARRAY = 2;
@@ -25,11 +25,19 @@ class Stopwatch extends SymfonyStopwatch
      */
     protected bool $emitSignals = false;
 
+    protected SymfonyStopwatch $stopwatch;
+
+    public function __construct(bool $morePrecision = false)
+    {
+        $this->stopwatch = new SymfonyStopwatch($morePrecision);
+    }
+
     public function enableSignals() : self {
         $this->emitSignals = true;
         return $this;
     }
-    public function disableSignals() : self {
+    public function disableSignals() : self
+    {
         $this->emitSignals = false;
         return $this;
     }
@@ -40,9 +48,10 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $id
      * @return $this
      */
-    public function openSection(string $id = null) : void {
-        parent::openSection($id);
-        if($this->emitSignals) {
+    public function openSection(string $id = null): self
+    {
+        $this->stopwatch->openSection($id);
+        if ($this->emitSignals) {
             $this->emitStopwatchOpenSection($this, $id);
         }
     }
@@ -54,9 +63,10 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $category Category of the event
      * @return StopwatchEvent
      */
-    public function restart(string $name, string $category = null) {
-        if(0 < count($this->startedEvents)) {
-            $this->stop($this->startedEvents[count($this->startedEvents)-1]);
+    public function restart(string $name, string $category = null)
+    {
+        if (0 < count($this->startedEvents)) {
+            $this->stop($this->startedEvents[count($this->startedEvents) - 1]);
         }
 
         return $this->start($name, $category);
@@ -76,11 +86,12 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function start(string $name, ?string $category = null) :StopwatchEvent {
+    public function start(string $name, ?string $category = null): StopwatchEvent
+    {
         $this->startedEvents[] = $name;
 
-        $res = parent::start($name, $category);
-        if($this->emitSignals) {
+        $res = $this->stopwatch->start($name, $category);
+        if ($this->emitSignals) {
             $this->emitStopwatchStart($this, $name, $category);
         }
         return $res;
@@ -101,9 +112,10 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function lap(string $name) : StopwatchEvent{
-        $res = parent::lap($name);
-        if($this->emitSignals) {
+    public function lap(string $name): StopwatchEvent
+    {
+        $res = $this->stopwatch->lap($name);
+        if ($this->emitSignals) {
             $this->emitStopwatchLap($this, $name);
         }
         return $res;
@@ -115,7 +127,9 @@ class Stopwatch extends SymfonyStopwatch
      * @return void
      * @Flow\Signal
      */
-    protected function emitStopwatchLap(Stopwatch $stopwatch, $name) {}
+    protected function emitStopwatchLap(Stopwatch $stopwatch, $name)
+    {
+    }
 
     /**
      * See Symfony Stopwatch docs https://symfony.com/doc/current/components/stopwatch.html
@@ -123,23 +137,23 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Name of the event
      * @return StopwatchEvent
      */
-    public function stop(string $name) : StopwatchEvent{
+    public function stop(string $name): StopwatchEvent
+    {
         if (!is_null($name)) {
             $idx = array_search($name, $this->startedEvents);
             if (false !== $idx) {
                 unset($this->startedEvents[$idx]);
                 $this->startedEvents = array_values($this->startedEvents);
             }
-        }
-        else if (is_null($name) && 0 < count($this->startedEvents)) {
-            $idx = count($this->startedEvents)-1;
+        } else if (is_null($name) && 0 < count($this->startedEvents)) {
+            $idx = count($this->startedEvents) - 1;
             $name = $this->startedEvents[$idx];
             unset($this->startedEvents[$idx]);
         }
 
-        $res = parent::stop($name);
+        $res = $this->stopwatch->stop($name);
 
-        if($this->emitSignals) {
+        if ($this->emitSignals) {
             $this->emitStopwatchStop($this, $name);
         }
 
@@ -152,14 +166,17 @@ class Stopwatch extends SymfonyStopwatch
      * @return void
      * @Flow\Signal
      */
-    protected function emitStopwatchStop(Stopwatch $stopwatch, $name) {}
+    protected function emitStopwatchStop(Stopwatch $stopwatch, $name)
+    {
+    }
 
     /**
      * Get the number of laps already occured for a given event
      * @param string|null $name Name of the event
      * @return int
      */
-    public function countLaps($name){
+    public function countLaps($name)
+    {
         $event = $this->getEvent($name);
         return count($event->getPeriods());
     }
@@ -170,9 +187,10 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $id
      * @return $this
      */
-    public function stopSection(string $id = null) : void {
-        parent::stopSection($id);
-        if($this->emitSignals) {
+    public function stopSection(string $id = null): self
+    {
+        $this->stopwatch->stopSection($id);
+        if ($this->emitSignals) {
             $this->emitStopwatchStopSection($this, $id);
         }
     }
@@ -183,7 +201,52 @@ class Stopwatch extends SymfonyStopwatch
      * @return void
      * @Flow\Signal
      */
-    protected function emitStopwatchStopSection(Stopwatch $stopwatch, $id) {}
+    protected function emitStopwatchStopSection(Stopwatch $stopwatch, $id)
+    {
+    }
+
+    public function getSections(): array
+    {
+        return $this->stopwatch->getSections();
+    }
+
+    public function isStarted(string $name): bool
+    {
+        return $this->stopwatch->isStarted($name);
+    }
+
+    public function getEvent(string $name): StopwatchEvent
+    {
+        return $this->stopwatch->getEvent($name);
+    }
+
+    public function getSectionEvents(string $id): array
+    {
+        return $this->stopwatch->getSectionEvents($id);
+    }
+
+    /**
+     * Stopwatch 7 provides this new method
+     */
+    public function getRootSectionEvents(): array
+    {
+        if (method_exists($this->stopwatch, 'getRootSectionEvents')) {
+            return $this->stopwatch->getRootSectionEvents();
+        }
+
+        throw new \BadMethodCallException(
+            sprintf('Method %s::%s does not exist.', SymfonyStopwatch::class, 'getRootSectionEvents')
+        );
+    }
+
+    public function reset() : self {
+        $this->stopwatch->reset();
+
+        $this->startedEvents = [];
+        $this->metaData = [];
+
+        return $this;
+    }
 
     /**
      * Return the metadata object for a given value or all metadata if $name is null
@@ -191,8 +254,9 @@ class Stopwatch extends SymfonyStopwatch
      * @param string|null $name Metadata name
      * @return mixed|null
      */
-    public function getEventMetadata(string $name=null){
-        if(is_null($name)){
+    public function getEventMetadata(string $name = null)
+    {
+        if (is_null($name)) {
             return $this->metaData;
         }
 
@@ -202,6 +266,7 @@ class Stopwatch extends SymfonyStopwatch
 
         return $this->metaData[$name];
     }
+
     /**
      * Set the metadata object for a given value
      *
@@ -209,7 +274,8 @@ class Stopwatch extends SymfonyStopwatch
      * @param mixed $data The corresponding metadata
      * @return mixed|null
      */
-    public function setEventMetadata(string $name, $data){
+    public function setEventMetadata(string $name, $data)
+    {
         $this->metaData[$name] = $data;
         return $this;
     }
@@ -218,13 +284,14 @@ class Stopwatch extends SymfonyStopwatch
      * Return the duration in milliseconds for the whole stopwatch over all events
      * @return int
      */
-    public function getDuration(){
+    public function getDuration()
+    {
         $duration = 0;
 
         /** @var Section $section */
-        foreach($this->getSections() as $section){
+        foreach ($this->getSections() as $section) {
             /** @var StopwatchEvent $event */
-            foreach($section->getEvents() as $event){
+            foreach ($section->getEvents() as $event) {
                 $duration += $event->getDuration();
             }
         }
@@ -239,7 +306,8 @@ class Stopwatch extends SymfonyStopwatch
      * @param int $finished (optional) The number of already processed elements, if none given the lap count for this event is used
      * @return int
      */
-    public function eta(string $name, int $all, int $finished = -1){
+    public function eta(string $name, int $all, int $finished = -1)
+    {
         $event = $this->getEvent($name);
 
         if (-1 == $finished) {
@@ -254,7 +322,7 @@ class Stopwatch extends SymfonyStopwatch
 
         $dur = $event->getDuration();
 
-        $eta = $pending*$dur/$finished;
+        $eta = $pending * $dur / $finished;
         return floor($eta);
     }
 
@@ -280,5 +348,4 @@ class Stopwatch extends SymfonyStopwatch
                 return sprintf("%02d:%02d:%02d.%03d", $hours,$min,$sec,$ms);
         }
     }
-
 }

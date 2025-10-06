@@ -2,6 +2,7 @@
 namespace Webandco\DevTools\Service\Stopwatch;
 
 use Symfony\Component\Stopwatch\Section;
+use Webandco\DevTools\Domain\Model\Dto\Stopwatch;
 use Webandco\DevTools\Service\Log\LogRenderInterface;
 use Webandco\DevTools\Service\Log\LogService;
 
