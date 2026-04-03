@@ -16,6 +16,9 @@
         "installer-name": "Webandco.DevTools",
         "neos": {
             "package-key": "Webandco.DevTools"
-        }
+        },
+        "applied-flow-migrations": [
+            "TYPO3.Form-20160601101500"
+        ]
     }
 }
